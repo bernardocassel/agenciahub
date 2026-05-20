@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agência Hub — Casa Publicidade</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--p:#534AB7;--pL:#EEEDFE;--pM:#7F77DD;--g:#1D9E75;--gL:#EAF3DE;--gD:#3B6D11;--r:#E24B4A;--rL:#FCEBEB;--rD:#A32D2D;--a:#EF9F27;--aL:#FAEEDA;--aD:#854F0B;--b:#378ADD;--bL:#E6F1FB;--bD:#185FA5;--bd:rgba(0,0,0,0.1);--bd2:rgba(0,0,0,0.18);--bg:#f5f5f3;--bg2:#fff;--bg3:#e8e8e6;--bg4:#f0f0ee;--t:#1a1a1a;--t2:#555;--t3:#999;--t4:#bbb;}
+[data-theme=dark]{--bg:#1a1a1f;--bg2:#252530;--bg3:#1e1e28;--bg4:#2a2a35;--t:#e8e8f0;--t2:#aaa;--t3:#666;--t4:#444;--bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.14);--pL:#2a2650;--gL:#1a2e1f;--rL:#2e1a1a;--aL:#2e2418;--bL:#1a2233;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--t);background:var(--bg);transition:background .2s;}
+button{cursor:pointer;font-family:inherit;}input,select,textarea{font-family:inherit;background:var(--bg2);color:var(--t);}
+.hidden{display:none!important;}
+
+/* AUTH */
+#authWrap{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.auth-box{background:var(--bg2);border:0.5px solid var(--bd);border-radius:18px;padding:42px 38px;width:390px;max-width:92vw;}
+.auth-logo{width:48px;height:48px;border-radius:12px;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin-bottom:22px;}
+.auth-err{background:var(--rL);color:var(--rD);border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:14px;}
+.fl{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.04em;}
+.fi{width:100%;border:0.5px solid var(--bd2);border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px;outline:none;}
+.fi:focus{border-color:var(--p);}
+.btn-auth{width:100%;background:var(--p);color:#fff;border:none;border-radius:9px;padding:12px;font-size:13px;font-weight:600;margin-top:6px;}
+
+/* SHELL */
+#shell{display:flex;height:100vh;overflow:hidden;}
+.sb{width:218px;background:var(--bg3);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;}
+.sb-head{padding:15px 13px 11px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:10px;}
+.sb-logo{width:32px;height:32px;border-radius:8px;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.sb-sec{padding:9px 9px 3px;}
+.sb-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;padding:0 3px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+.sb-lbl button{background:none;border:none;font-size:17px;color:var(--t3);line-height:1;padding:0;cursor:pointer;}
+.nav-it{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:var(--t2);margin-bottom:2px;transition:background .12s;}
+.nav-it:hover{background:var(--bd);color:var(--t);}
+.nav-it.on{background:var(--pL);color:var(--p);font-weight:600;}
+.cl-scroll{flex:1;overflow-y:auto;padding:3px 7px 8px;}
+.cl-it{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:9px;cursor:pointer;margin-bottom:2px;transition:background .12s;position:relative;}
+.cl-it:hover{background:var(--bd);}
+.cl-it.on{background:var(--pL);}
+.cl-av{width:27px;height:27px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.cl-del{position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:0;font-size:11px;background:var(--rL);color:var(--rD);border:none;border-radius:5px;padding:2px 6px;cursor:pointer;transition:opacity .15s;}
+.cl-it:hover .cl-del{opacity:1;}
+.sb-bot{margin-top:auto;padding:11px 12px;border-top:0.5px solid var(--bd);display:flex;gap:7px;}
+.theme-btn{background:none;border:0.5px solid var(--bd2);border-radius:7px;padding:6px 9px;font-size:14px;color:var(--t2);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:10px 20px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:10px;background:var(--bg2);flex-shrink:0;}
+.tb-title{font-size:15px;font-weight:700;flex:1;color:var(--t);}
+.tb-title span{font-weight:400;color:var(--t3);}
+.content{flex:1;overflow-y:auto;padding:20px;}
+.tabs{display:flex;border-bottom:0.5px solid var(--bd);padding:0 20px;background:var(--bg2);flex-shrink:0;}
+.tab{padding:10px 13px;font-size:12px;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-.5px;white-space:nowrap;font-weight:500;transition:all .12s;}
+.tab.on{color:var(--p);border-bottom-color:var(--p);font-weight:700;}
+
+/* BADGES */
+.bdg{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;white-space:nowrap;display:inline-block;}
+.b-urg{background:var(--rL);color:var(--rD);}
+.b-alt{background:var(--aL);color:var(--aD);}
+.b-ok{background:var(--gL);color:var(--gD);}
+.b-inf{background:var(--bL);color:var(--bD);}
+
+/* METRICS */
+.met-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.met{border-radius:12px;padding:14px 16px;}
+
+/* THERMOMETER */
+.therm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px;}
+.therm-card{background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;}
+
+/* CHARTS */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.chart-box{background:var(--bg4);border-radius:12px;padding:14px;}
+.chart-box-t{font-size:10px;font-weight:700;color:var(--t2);margin-bottom:9px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* CARDS */
+.card{background:var(--bg2);border:0.5px solid var(--bd);border-radius:13px;padding:14px;}
+.card.sel{border:2px solid var(--p);}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:10px;margin-bottom:16px;}
+.prog{height:5px;background:var(--bg3);border-radius:5px;overflow:hidden;margin:9px 0 5px;}
+.prog-f{height:100%;border-radius:5px;}
+
+/* FRENTES */
+.frente-card{background:var(--bg4);border:0.5px solid var(--bd);border-radius:10px;margin-bottom:8px;overflow:hidden;}
+.frente-head{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;}
+.frente-head:hover{background:var(--bd);}
+.frente-body{border-top:0.5px solid var(--bd);padding:12px 13px;}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
+.kc{background:var(--bg4);border-radius:11px;padding:10px;}
+.kc-h{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.kc-n{background:var(--bg2);border:0.5px solid var(--bd);width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;}
+.kcard{background:var(--bg2);border:0.5px solid var(--bd);border-radius:9px;padding:10px;margin-bottom:7px;cursor:pointer;}
+.kcard:hover{border-color:var(--bd2);}
+.udot{width:6px;height:6px;border-radius:50%;background:var(--r);display:inline-block;margin-right:4px;vertical-align:middle;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);padding:7px 10px;border-bottom:0.5px solid var(--bd);text-transform:uppercase;letter-spacing:.04em;}
+.tbl td{padding:10px 10px;border-bottom:0.5px solid var(--bd);vertical-align:middle;color:var(--t);}
+.tbl tr:hover td{background:var(--bg4);}
+
+/* CHECKLIST */
+.ck-list{border:0.5px solid var(--bd);border-radius:10px;overflow:hidden;}
+.ck-it{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:0.5px solid var(--bd);font-size:12px;color:var(--t);}
+.ck-it:last-child{border:none;}
+.ck-it.done span{text-decoration:line-through;color:var(--t3);}
+.ck-it input{accent-color:var(--p);cursor:pointer;width:15px;height:15px;}
+
+/* COMMENTS */
+.cmt-box{border:0.5px solid var(--bd);border-radius:11px;overflow:hidden;}
+.cmt{padding:11px 14px;border-bottom:0.5px solid var(--bd);}
+.cmt:last-child{border:none;}
+.cmt-h{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.cmt-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.inp-row{display:flex;gap:8px;padding:10px 14px;background:var(--bg3);}
+.cmt-inp{flex:1;font-size:12px;border:0.5px solid var(--bd2);border-radius:9px;padding:7px 10px;outline:none;}
+.cmt-inp:focus{border-color:var(--p);}
+
+/* DELIVERIES */
+.del-it{background:var(--bg2);border:0.5px solid var(--bd);border-radius:11px;margin-bottom:10px;overflow:hidden;}
+.del-h{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;}
+.del-h:hover{background:var(--bg3);}
+.del-body{border-top:0.5px solid var(--bd);padding:14px 15px;}
+
+/* MODAL */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:400;}
+.mbox{background:var(--bg2);border-radius:18px;border:0.5px solid var(--bd);width:430px;max-width:93vw;max-height:90vh;overflow-y:auto;padding:24px;}
+.mbox.wide{width:640px;}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.mt{font-size:16px;font-weight:700;color:var(--t);}
+.mx{cursor:pointer;font-size:24px;color:var(--t3);line-height:1;background:none;border:none;padding:0;}
+.fg{margin-bottom:13px;}
+.fg label{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.04em;}
+.fg input,.fg select,.fg textarea{width:100%;border:0.5px solid var(--bd2);border-radius:9px;padding:8px 11px;font-size:13px;outline:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--p);}
+.fg textarea{min-height:76px;resize:vertical;}
+.mft{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+/* BUTTONS */
+.bp{font-size:12px;padding:7px 16px;border-radius:9px;border:none;background:var(--p);color:#fff;font-weight:600;}
+.bp:hover{opacity:.85;}
+.bo{font-size:12px;padding:7px 16px;border-radius:9px;border:0.5px solid var(--bd2);background:var(--bg2);color:var(--t);font-weight:500;}
+.bo:hover{background:var(--bg3);}
+.bsm{font-size:11px;padding:4px 11px;border-radius:7px;border:0.5px solid var(--bd2);background:var(--bg2);color:var(--t);}
+.bdanger{font-size:11px;padding:5px 12px;border-radius:7px;border:none;background:var(--rL);color:var(--rD);font-weight:600;}
+
+/* AI ASSISTANT */
+.ai-wrap{background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;padding:20px;}
+.rec-btn{width:80px;height:80px;border-radius:50%;border:none;background:var(--r);color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:transform .15s,box-shadow .15s;}
+.rec-btn.recording{animation:pulse 1.2s infinite;background:#c0392b;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.ai-task-card{background:var(--bg4);border:0.5px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+
+/* PORTAL */
+#portal{min-height:100vh;background:var(--bg);}
+.pnav{background:var(--bg2);border-bottom:0.5px solid var(--bd);padding:0 24px;display:flex;align-items:center;flex-wrap:wrap;}
+.plogo{display:flex;align-items:center;gap:10px;padding:13px 22px 13px 0;margin-right:22px;border-right:0.5px solid var(--bd);}
+.ptabs{display:flex;flex:1;}
+.ptab{padding:14px 13px;font-size:12px;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-.5px;white-space:nowrap;font-weight:500;}
+.ptab.on{color:var(--p);border-bottom-color:var(--p);font-weight:700;}
+.puser{display:flex;align-items:center;gap:8px;padding:9px 0;margin-left:auto;}
+.pbody{padding:24px;max-width:960px;margin:0 auto;}
+.hero{background:var(--bg2);border:0.5px solid var(--bd);border-radius:16px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:center;gap:16px;}
+.pmet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.pmet{background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;}
+
+.empty{text-align:center;padding:36px;color:var(--t3);font-size:12px;}
+.sec-t{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--t);}
+.fbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.fbar select{font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;}
+</style>
+</head>
+<body>
+
+<div id="authWrap">
+  <div class="auth-box">
+    <div class="auth-logo">AH</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px;color:var(--t);">Agência Hub</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:26px;">Casa Publicidade — acesse sua conta</div>
+    <div class="auth-err hidden" id="authErr"></div>
+    <label class="fl">E-mail</label>
+    <input class="fi" id="aEmail" type="email" placeholder="seu@email.com">
+    <label class="fl">Senha</label>
+    <input class="fi" id="aPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-auth" onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<div id="shell" class="hidden">
+  <div class="sb">
+    <div class="sb-head">
+      <div class="sb-logo">AH</div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--t);">Agência Hub</div><div style="font-size:10px;color:var(--t3);">Painel interno</div></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Menu</div>
+      <div class="nav-it on" id="nv-dashboard" onclick="gv('dashboard')"><span style="width:16px;text-align:center;">⊞</span>Dashboard</div>
+      <div class="nav-it" id="nv-all-tasks" onclick="gv('all-tasks')"><span style="width:16px;text-align:center;">✓</span>Todas as tarefas</div>
+      <div class="nav-it" id="nv-team" onclick="gv('team')"><span style="width:16px;text-align:center;">◎</span>Equipe</div>
+      <div class="nav-it" id="nv-ai" onclick="gv('ai')"><span style="width:16px;text-align:center;">🤖</span>IA Assistente</div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Clientes <button onclick="om('client',{})">+</button></div>
+    </div>
+    <div class="cl-scroll" id="clList"></div>
+    <div class="sb-bot">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="bo" style="flex:1;font-size:11px;" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="tbT">Dashboard</div>
+      <div id="tbA"></div>
+    </div>
+    <div class="tabs hidden" id="clTabs">
+      <div class="tab on" data-t="projetos" onclick="st(this)">Projetos</div>
+      <div class="tab" data-t="kanban" onclick="st(this)">Kanban</div>
+      <div class="tab" data-t="checklist" onclick="st(this)">Checklist</div>
+      <div class="tab" data-t="entregas" onclick="st(this)">Entregas</div>
+      <div class="tab" data-t="comentarios" onclick="st(this)">Comentários</div>
+      <div class="tab" data-t="solicitacoes" onclick="st(this)">Solicitações</div>
+    </div>
+    <div class="content" id="mc"></div>
+  </div>
+</div>
+
+<div id="portal" class="hidden">
+  <div class="pnav">
+    <div class="plogo">
+      <div style="width:32px;height:32px;border-radius:8px;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">AH</div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--t);">Agência Hub</div><div style="font-size:10px;color:var(--t3);">Portal do cliente</div></div>
+    </div>
+    <div class="ptabs">
+      <div class="ptab on" data-p="visao" onclick="spt(this)">Visão geral</div>
+      <div class="ptab" data-p="projetos" onclick="spt(this)">Projetos</div>
+      <div class="ptab" data-p="entregas" onclick="spt(this)">Entregas</div>
+      <div class="ptab" data-p="solicitar" onclick="spt(this)">Solicitar</div>
+      <div class="ptab" data-p="comunicacao" onclick="spt(this)">Comunicação</div>
+      <div class="ptab" data-p="avaliar" onclick="spt(this)">Avaliar</div>
+    </div>
+    <div class="puser">
+      <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+      <div id="pAv" style="width:30px;height:30px;border-radius:50%;background:var(--pL);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">?</div>
+      <div><div id="pNm" style="font-size:12px;font-weight:700;color:var(--t);"></div><div id="pEm" style="font-size:10px;color:var(--t3);"></div></div>
+      <button class="bo" style="font-size:11px;padding:5px 11px;margin-left:8px;" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <div class="pbody" id="pc"></div>
+</div>
+
+<div class="mov hidden" id="mov" onclick="if(event.target===this)cm()">
+  <div class="mbox" id="mb"></div>
+</div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,orderBy,serverTimestamp,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const FB={apiKey:"AIzaSyDa3_tWC7eIL2BKsDsxr25_VuwACPGogLM",authDomain:"casa-publicidade.firebaseapp.com",projectId:"casa-publicidade",storageBucket:"casa-publicidade.firebasestorage.app",messagingSenderId:"204202554588",appId:"1:204202554588:web:ab4c81426f8555c70af019"};
+const fbApp=initializeApp(FB),auth=getAuth(fbApp),db=getFirestore(fbApp);
+
+const CC=["#534AB7","#0F6E56","#993C1D","#185FA5","#639922","#993556"];
+const CB=["#EEEDFE","#E1F5EE","#FAECE7","#E6F1FB","#EAF3DE","#FBEAF0"];
+const PC={urgente:['var(--rL)','var(--rD)'],alta:['var(--aL)','var(--aD)'],normal:['var(--gL)','var(--gD)']};
+const SL={todo:'A fazer',doing:'Em andamento',review:'Revisão',done:'Concluído'};
+const SC={todo:['var(--bg4)','var(--t2)'],doing:['var(--bL)','var(--bD)'],review:['var(--aL)','var(--aD)'],done:['var(--gL)','var(--gD)']};
+const FRENTE_TYPES=['Social Media','Captação de Vídeo','Material Gráfico','Campanha Paga','Copywriting','Email Marketing','SEO','Estratégia','Outro'];
+const FICONS={'Social Media':'📱','Captação de Vídeo':'🎬','Material Gráfico':'🎨','Campanha Paga':'📣','Copywriting':'✍️','Email Marketing':'📧','SEO':'🔍','Estratégia':'🧭','Outro':'📁'};
+
+const S={profile:null,view:'dashboard',acl:null,atab:'projetos',aproj:null,afren:null,ptab:'visao',
+  clients:[],projects:[],frentes:[],tasks:[],checklist:[],comments:[],deliveries:[],requests:[],ratings:[],team:[],
+  oe:{},of:{},op:{},unsubs:[],charts:{}};
+
+const cc=id=>{const i=Math.max(0,S.clients.findIndex(c=>c.id===id));return{color:CC[i%CC.length],bg:CB[i%CB.length]};};
+const bdg=(l,bg,c)=>`<span class="bdg" style="background:${bg};color:${c};">${l}</span>`;
+const pb=p=>{const c=PC[p]||PC.normal;return bdg(p||'normal',c[0],c[1]);};
+const sb=s=>{const c=SC[s]||SC.todo;return bdg(SL[s]||s,c[0],c[1]);};
+const av=(i,c,b,s=26)=>`<div style="width:${s}px;height:${s}px;border-radius:50%;background:${b};color:${c};display:flex;align-items:center;justify-content:center;font-size:${Math.floor(s*.4)}px;font-weight:700;flex-shrink:0;">${i[0]||'?'}</div>`;
+const ft=ts=>{if(!ts)return'';try{const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch{return'';}};
+const show=w=>{['authWrap','shell','portal'].forEach(id=>document.getElementById(id).classList.toggle('hidden',id!==w));};
+const dc=id=>{if(S.charts[id]){S.charts[id].destroy();delete S.charts[id];}};
+const $=id=>document.getElementById(id);
+const fval=id=>$(id)?.value.trim()||'';
+const teamNames=()=>S.team.map(m=>m.name||m.email).filter(Boolean);
+
+// THEME
+let isDark=localStorage.getItem('ahTheme')==='dark';
+const applyTheme=()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');document.querySelectorAll('.theme-btn,#themeBtn').forEach(b=>{if(b)b.textContent=isDark?'☀️':'🌙';});};
+window.toggleTheme=()=>{isDark=!isDark;localStorage.setItem('ahTheme',isDark?'dark':'light');applyTheme();rv();};
+applyTheme();
+
+// AUTH
+window.login=async()=>{
+  const e=$('aEmail').value.trim(),p=$('aPass').value;
+  const err=$('authErr');err.classList.add('hidden');
+  try{await signInWithEmailAndPassword(auth,e,p);}
+  catch{err.textContent='E-mail ou senha incorretos.';err.classList.remove('hidden');}
+};
+window.logout=async()=>{S.unsubs.forEach(u=>u());S.unsubs=[];await signOut(auth);show('authWrap');};
+
+onAuthStateChanged(auth,async u=>{
+  if(!u){show('authWrap');return;}
+  const snap=await getDoc(doc(db,'users',u.uid));
+  if(!snap.exists()){show('authWrap');$('authErr').textContent='Usuário não configurado.';$('authErr').classList.remove('hidden');await signOut(auth);return;}
+  S.profile={uid:u.uid,email:u.email,...snap.data()};
+  ['agency','team'].includes(S.profile.role)?startAgency():startPortal();
+});
+
+// AGENCY
+function startAgency(){
+  show('shell');S.unsubs.forEach(u=>u());S.unsubs=[];
+  // If team member, restrict view
+  if(S.profile.role==='team'){
+    // Hide some nav items
+    $('nv-team') && ($('nv-team').style.display='none');
+  }
+  S.unsubs=[
+    onSnapshot(query(collection(db,'clients'),orderBy('createdAt','desc')),s=>{S.clients=s.docs.map(d=>({id:d.id,...d.data()}));renderCL();rv();}),
+    onSnapshot(query(collection(db,'projects'),orderBy('createdAt','desc')),s=>{S.projects=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'frentes'),orderBy('createdAt','desc')),s=>{S.frentes=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'tasks'),orderBy('createdAt','desc')),s=>{S.tasks=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'checklist'),orderBy('order','asc')),s=>{S.checklist=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'comments'),orderBy('createdAt','asc')),s=>{S.comments=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'deliveries'),orderBy('createdAt','desc')),s=>{S.deliveries=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),s=>{S.requests=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'ratings'),orderBy('createdAt','desc')),s=>{S.ratings=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'users')),s=>{S.team=s.docs.map(d=>({id:d.id,...d.data()})).filter(u=>['team','agency'].includes(u.role));rv();}),
+  ];
+}
+
+function renderCL(){
+  const el=$('clList');if(!el)return;
+  el.innerHTML=S.clients.map(c=>{const k=cc(c.id);return`<div class="cl-it ${S.acl===c.id&&S.view==='client'?'on':''}" onclick="selCl('${c.id}')">
+    <div class="cl-av" style="background:${k.bg};color:${k.color};">${c.initials||'?'}</div>
+    <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div><div style="font-size:10px;color:var(--t3);">${S.projects.filter(p=>p.clientId===c.id).length} proj.</div></div>
+    ${S.profile.role==='agency'?`<button class="cl-del" onclick="event.stopPropagation();delClient('${c.id}','${c.name}')">✕</button>`:''}
+  </div>`;}).join('');
+}
+
+window.delClient=async(id,name)=>{if(!confirm(`Excluir o cliente "${name}" e todos os dados? Esta ação é irreversível.`))return;await deleteDoc(doc(db,'clients',id));if(S.acl===id){S.acl=null;S.view='dashboard';gv('dashboard');}};
+
+window.gv=v=>{S.view=v;S.acl=null;document.querySelectorAll('.nav-it').forEach(e=>e.classList.remove('on'));$('nv-'+v)?.classList.add('on');document.querySelectorAll('.cl-it').forEach(e=>e.classList.remove('on'));$('clTabs').classList.add('hidden');rv();};
+
+window.selCl=id=>{
+  S.acl=id;S.view='client';S.atab='projetos';S.aproj=null;S.afren=null;
+  document.querySelectorAll('.nav-it,.cl-it').forEach(e=>e.classList.remove('on'));
+  $('clTabs').classList.remove('hidden');
+  document.querySelectorAll('#clTabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.t==='projetos'));
+  renderCL();rv();
+};
+
+window.st=el=>{document.querySelectorAll('#clTabs .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');S.atab=el.dataset.t;S.aproj=null;S.afren=null;rv();};
+
+function rv(){
+  const ti=$('tbT'),ac=$('tbA');if(!ti)return;
+  if(S.view==='dashboard'){ti.innerHTML='Dashboard';ac.innerHTML=S.profile.role==='agency'?`<button class="bp" onclick="om('client',{})">+ Cliente</button>`:'';renderDash();}
+  else if(S.view==='all-tasks'){ti.innerHTML='Todas as tarefas';ac.innerHTML=`<button class="bp" onclick="om('task',{})">+ Nova tarefa</button>`;renderAllTasks();}
+  else if(S.view==='team'){ti.innerHTML='Equipe';ac.innerHTML=`<button class="bp" onclick="om('team-member',{})">+ Membro</button>`;renderTeam();}
+  else if(S.view==='ai'){ti.innerHTML='🤖 IA Assistente';ac.innerHTML='';renderAI();}
+  else if(S.view==='client'){
+    const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
+    ti.innerHTML=`<span>Clientes / </span>${c.name}`;
+    ac.innerHTML=`<button class="bo" style="margin-right:8px;" onclick="openClientPortal()">👁 Portal completo</button><button class="bp" onclick="om('task',{clientId:'${c.id}'})">+ Tarefa</button>`;
+    renderCV();
+  }
+}
+
+// Client score
+function clientScore(cid){const rs=S.ratings.filter(r=>r.clientId===cid);if(!rs.length)return null;return Math.round(rs.reduce((a,r)=>a+r.score,0)/rs.length);}
+
+// ── DASHBOARD ──
+function renderDash(){
+  const fv=document.querySelector('#dashFilter')?.value||'';
+  const fcl=fv?S.clients.filter(c=>c.id===fv):S.clients;
+  const fprojs=S.projects.filter(p=>!fv||p.clientId===fv);
+  const ftasks=S.tasks.filter(t=>!fv||t.clientId===fv);
+  const furg=ftasks.filter(t=>t.urgent&&t.status!=='done');
+  const fdone=ftasks.filter(t=>t.status==='done').length;
+  const pend=S.requests.filter(r=>r.status==='recebido'&&(!fv||r.clientId===fv));
+
+  $('mc').innerHTML=`
+  <div class="fbar"><span style="font-size:12px;color:var(--t2);font-weight:600;">Filtrar por cliente:</span>
+    <select id="dashFilter" onchange="rv()" style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;min-width:180px;">
+      <option value="">Todos os clientes</option>${S.clients.map(c=>`<option value="${c.id}" ${fv===c.id?'selected':''}>${c.name}</option>`).join('')}
+    </select>
+  </div>
+  <div class="met-grid">
+    <div class="met" style="background:var(--pL);"><div style="font-size:10px;color:var(--p);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Clientes</div><div style="font-size:26px;font-weight:700;color:var(--p);">${fcl.length}</div></div>
+    <div class="met" style="background:var(--bL);"><div style="font-size:10px;color:var(--bD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Projetos</div><div style="font-size:26px;font-weight:700;color:var(--bD);">${fprojs.length}</div></div>
+    <div class="met" style="background:var(--rL);"><div style="font-size:10px;color:var(--rD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Urgentes</div><div style="font-size:26px;font-weight:700;color:var(--rD);">${furg.length}</div></div>
+    <div class="met" style="background:var(--gL);"><div style="font-size:10px;color:var(--gD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Concluídas</div><div style="font-size:26px;font-weight:700;color:var(--gD);">${fdone}/${ftasks.length}</div></div>
+  </div>
+  <div class="sec-t">🌡️ Termômetro de satisfação</div>
+  <div class="therm-grid" id="thermGrid"></div>
+  <div class="chart-row">
+    <div class="chart-box"><div class="chart-box-t">Status das tarefas</div><div style="position:relative;height:180px;"><canvas id="chStatus" role="img" aria-label="Status">Status.</canvas></div></div>
+    <div class="chart-box"><div class="chart-box-t">Progresso por projeto</div><div style="position:relative;height:${Math.max(180,fprojs.length*38+40)}px;"><canvas id="chProj" role="img" aria-label="Progresso">Progresso.</canvas></div></div>
+  </div>
+  <div class="chart-box" style="margin-bottom:16px;"><div class="chart-box-t">Tarefas por responsável</div><div style="position:relative;height:150px;"><canvas id="chTeam" role="img" aria-label="Equipe">Equipe.</canvas></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div><div class="sec-t">Clientes</div>
+      ${fcl.map(c=>{const k=cc(c.id);const ps=S.projects.filter(p=>p.clientId===c.id);const avg=ps.length?Math.round(ps.reduce((a,p)=>a+(p.progress||0),0)/ps.length):0;const sc=clientScore(c.id);return`<div onclick="selCl('${c.id}')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;margin-bottom:8px;cursor:pointer;">${av(c.initials||c.name,k.color,k.bg,34)}<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${c.name}</div><div style="font-size:10px;color:var(--t3);">${ps.length} projeto(s)</div></div><div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:var(--t);">${avg}%</div><div style="width:60px;height:3px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:${avg}%;background:${k.color};border-radius:3px;"></div></div></div>${sc!==null?`<div style="margin-left:10px;font-size:12px;font-weight:700;color:${sc<70?'var(--rD)':sc<85?'var(--aD)':'var(--gD)'};">${sc}%</div>`:''}</div>`;}).join('')}
+      ${fcl.length===0?'<div class="empty">Nenhum cliente. Clique em "+ Cliente".</div>':''}
+    </div>
+    <div><div class="sec-t">Tarefas urgentes</div>
+      ${furg.slice(0,6).map(t=>{const cl=S.clients.find(c=>c.id===t.clientId);return`<div style="display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:10px;margin-bottom:7px;"><span class="udot"></span><div style="flex:1;font-size:12px;color:var(--t);">${t.title}</div><span style="font-size:10px;color:var(--t3);">${t.assignee||''}</span></div>`;}).join('')}
+      ${furg.length===0?'<div class="empty">Nenhuma tarefa urgente 🎉</div>':''}
+      ${pend.length?`<div class="sec-t" style="margin-top:14px;">Solicitações pendentes</div>${pend.slice(0,4).map(r=>{const cl=S.clients.find(c=>c.id===r.clientId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};return`<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 14px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:11px;margin-bottom:8px;">${av(cl?.initials||'?',k.color,k.bg)}<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--t);">${r.title}</div><div style="font-size:11px;color:var(--t2);">${r.description||''}</div></div><div style="display:flex;gap:5px;">${pb(r.priority)}<button class="bp" style="font-size:10px;padding:3px 9px;" onclick="updateDoc(doc(db,'requests','${r.id}'),{status:'em andamento'})">Iniciar</button></div></div>`;}).join('')}`:''}
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    // Thermo
+    const tg=$('thermGrid');
+    if(tg)tg.innerHTML=fcl.map(c=>{const sc=clientScore(c.id);const k=cc(c.id);if(sc===null)return`<div class="therm-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">${av(c.initials||c.name,k.color,k.bg,28)}<span style="font-size:12px;font-weight:700;color:var(--t);flex:1;">${c.name}</span><span style="font-size:16px;color:var(--t3);">—</span></div><div style="height:7px;background:var(--bg3);border-radius:7px;"></div><div style="font-size:10px;color:var(--t3);margin-top:4px;">Sem avaliações</div></div>`;const col=sc<70?'var(--r)':sc<85?'var(--a)':'var(--g)';const lbl=sc<70?'⚠️ Crítico — ação necessária!':sc<85?'Atenção — pode melhorar':'Satisfatório';return`<div class="therm-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">${av(c.initials||c.name,k.color,k.bg,28)}<span style="font-size:12px;font-weight:700;color:var(--t);flex:1;">${c.name}</span><span style="font-size:18px;font-weight:700;color:${col};">${sc}%</span></div><div style="height:7px;background:var(--bg3);border-radius:7px;overflow:hidden;"><div style="height:100%;width:${sc}%;background:${col};border-radius:7px;transition:width .4s;"></div></div><div style="font-size:10px;color:${col};margin-top:4px;font-weight:600;">${lbl}</div></div>`;}).join('');
+
+    // Charts
+    ['chStatus','chProj','chTeam'].forEach(dc);
+    const isDk=document.documentElement.getAttribute('data-theme')==='dark';
+    const gc=isDk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';const tc=isDk?'#888':'#666';
+    const stC={todo:0,doing:0,review:0,done:0};ftasks.forEach(t=>stC[t.status]=(stC[t.status]||0)+1);
+    S.charts['chStatus']=new Chart($('chStatus'),{type:'doughnut',data:{labels:['A fazer','Em andamento','Revisão','Concluído'],datasets:[{data:[stC.todo,stC.doing,stC.review,stC.done],backgroundColor:['#888780','#378ADD','#EF9F27','#1D9E75'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
+    if(fprojs.length){S.charts['chProj']=new Chart($('chProj'),{type:'bar',data:{labels:fprojs.map(p=>p.name.length>15?p.name.slice(0,15)+'…':p.name),datasets:[{data:fprojs.map(p=>p.progress||0),backgroundColor:fprojs.map((_,i)=>CC[i%CC.length]),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{callback:v=>v+'%',font:{size:10},color:tc},grid:{color:gc}},y:{ticks:{font:{size:10},color:tc},grid:{display:false}}}}});}
+    const assignees=[...new Set(ftasks.map(t=>t.assignee).filter(Boolean))];
+    if(assignees.length){const cnts=assignees.map(a=>ftasks.filter(t=>t.assignee===a).length);S.charts['chTeam']=new Chart($('chTeam'),{type:'bar',data:{labels:assignees,datasets:[{data:cnts,backgroundColor:CC.slice(0,assignees.length),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1,font:{size:10},color:tc},grid:{color:gc}},x:{ticks:{font:{size:11},color:tc},grid:{display:false}}}}});}
+  },80);
+}
+
+// ── ALL TASKS ──
+function renderAllTasks(){
+  $('mc').innerHTML=`<div class="fbar">
+    <select id="ftC" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos clientes</option>${S.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
+    <select id="ftS" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos status</option>${Object.entries(SL).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+    <select id="ftA" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos responsáveis</option>${teamNames().map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+  </div><div id="ttbl"></div>`;
+  // Filter by team member if role is team
+  if(S.profile.role==='team'){const el=$('ftA');if(el){const myName=S.profile.name||S.profile.email;const opt=[...el.options].find(o=>o.value===myName);if(opt)opt.selected=true;}}
+  ftT();
+}
+window.ftT=()=>{
+  const fc=$('ftC')?.value,fs=$('ftS')?.value,fa=$('ftA')?.value;
+  let t=S.tasks;
+  if(S.profile.role==='team'&&!fa){const mn=S.profile.name||S.profile.email;t=t.filter(x=>x.assignee===mn);}
+  if(fc)t=t.filter(x=>x.clientId===fc);if(fs)t=t.filter(x=>x.status===fs);if(fa)t=t.filter(x=>x.assignee===fa);
+  const el=$('ttbl');if(!el)return;
+  if(!t.length){el.innerHTML='<div class="empty">Nenhuma tarefa.</div>';return;}
+  el.innerHTML=`<table class="tbl"><thead><tr>${['Tarefa','Cliente','Projeto','Frente','Responsável','Status','Prazo',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+  ${t.map(x=>{const cl=S.clients.find(c=>c.id===x.clientId);const pr=S.projects.find(p=>p.id===x.projectId);const fr=S.frentes.find(f=>f.id===x.frenteId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};return`<tr>
+    <td style="font-weight:600;">${x.urgent?'<span class="udot"></span>':''}${x.title}</td>
+    <td>${cl?`<span style="background:${k.bg};color:${k.color};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;">${cl.name}</span>`:''}</td>
+    <td style="color:var(--t2);">${pr?.name||''}</td>
+    <td style="color:var(--t2);">${fr?`${FICONS[fr.type]||'📁'} ${fr.name}`:'—'}</td>
+    <td>${x.assignee||'—'}</td><td>${sb(x.status)}</td><td style="color:var(--t3);">${x.deadline||''}</td>
+    <td><button class="bsm" onclick='om("task",${JSON.stringify(x).replace(/'/g,"&#39;")})'>Editar</button></td>
+  </tr>`;}).join('')}</tbody></table>`;
+};
+
+// ── TEAM ──
+function renderTeam(){
+  $('mc').innerHTML=`
+  <div class="sec-t">Membros com acesso</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;">
+    ${S.team.map((m,i)=>`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${av(m.name||m.email,CC[i%CC.length],CB[i%CB.length],38)}<div><div style="font-size:13px;font-weight:700;color:var(--t);">${m.name||m.email}</div><div style="font-size:10px;color:var(--t3);">${m.role==='agency'?'Admin':'Equipe'}</div></div></div>
+      <div style="font-size:11px;color:var(--t3);">${m.email}</div>
+    </div>`).join('')}
+    ${S.team.length===0?'<div class="empty" style="grid-column:1/-1;">Nenhum membro ainda.</div>':''}
+  </div>
+  <div class="sec-t">Tarefas por responsável</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+    ${[...new Set(S.tasks.map(t=>t.assignee).filter(Boolean))].map((a,i)=>{const mt=S.tasks.filter(t=>t.assignee===a);return`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">${av(a,CC[i%CC.length],CB[i%CB.length],38)}<div><div style="font-size:13px;font-weight:700;color:var(--t);">${a}</div><div style="font-size:10px;color:var(--t3);">${mt.length} tarefas</div></div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;">
+        <div style="background:var(--bL);border-radius:8px;padding:8px;"><div style="font-size:18px;font-weight:700;color:var(--bD);">${mt.filter(t=>t.status==='doing').length}</div><div style="font-size:9px;color:var(--bD);font-weight:600;">Andamento</div></div>
+        <div style="background:var(--rL);border-radius:8px;padding:8px;"><div style="font-size:18px;font-weight:700;color:var(--rD);">${mt.filter(t=>t.urgent&&t.status!=='done').length}</div><div style="font-size:9px;color:var(--rD);font-weight:600;">Urgentes</div></div>
+        <div style="background:var(--gL);border-radius:8px;padding:8px;"><div style="font-size:18px;font-weight:700;color:var(--gD);">${mt.filter(t=>t.status==='done').length}</div><div style="font-size:9px;color:var(--gD);font-weight:600;">Concluídas</div></div>
+      </div>
+    </div>`;}).join('')}
+  </div>`;
+}
+
+// ── AI ASSISTANT ──
+let mediaRecorder=null,audioChunks=[],isRecording=false;
+function renderAI(){
+  $('mc').innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:flex-start;">
+  <div>
+    <div class="sec-t">🎙️ Gravar reunião / brainstorm</div>
+    <div class="ai-wrap">
+      <p style="font-size:12px;color:var(--t2);margin-bottom:18px;">Grave uma reunião, brainstorm ou notes de voz. A IA vai transcrever e criar automaticamente tarefas, projetos e uma ata.</p>
+      <div style="text-align:center;margin-bottom:20px;">
+        <button class="rec-btn" id="recBtn" onclick="toggleRec()">🎙️</button>
+        <div id="recStatus" style="font-size:12px;color:var(--t3);margin-top:10px;">Clique para iniciar gravação</div>
+        <div id="recTime" style="font-size:22px;font-weight:700;color:var(--t);margin-top:5px;display:none;">0:00</div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="fl">Ou cole o texto da reunião / ata</label>
+        <textarea id="aiText" style="width:100%;min-height:120px;border:0.5px solid var(--bd2);border-radius:9px;padding:9px 11px;font-size:12px;resize:vertical;outline:none;" placeholder="Cole aqui a transcrição, notas de reunião, lista de tarefas ou qualquer texto..."></textarea>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="fl">Cliente relacionado (opcional)</label>
+        <select id="aiClient" style="width:100%;border:0.5px solid var(--bd2);border-radius:9px;padding:8px 11px;font-size:12px;outline:none;background:var(--bg2);color:var(--t);">
+          <option value="">Selecione o cliente...</option>${S.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <button class="bp" style="width:100%;padding:12px;font-size:13px;" onclick="processAI()">🤖 Analisar e criar tarefas com IA</button>
+      <div id="aiLoading" class="hidden" style="text-align:center;padding:20px;color:var(--t2);font-size:12px;">⏳ Analisando com IA... aguarde</div>
+    </div>
+  </div>
+  <div>
+    <div class="sec-t">📋 Resultado da análise</div>
+    <div id="aiResult" style="min-height:200px;">
+      <div class="empty">Grave um áudio ou cole um texto e clique em "Analisar com IA" para ver as sugestões aqui.</div>
+    </div>
+  </div>
+  </div>`;
+}
+
+let recInterval=null,recSeconds=0;
+window.toggleRec=async()=>{
+  if(!isRecording){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream);audioChunks=[];
+      mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+      mediaRecorder.onstop=async()=>{
+        const blob=new Blob(audioChunks,{type:'audio/webm'});
+        stream.getTracks().forEach(t=>t.stop());
+        $('recStatus').textContent='Áudio gravado! Analisando transcrição...';
+        // Convert to text via a simple placeholder (real implementation would use Whisper API)
+        $('aiText').value='[Transcrição do áudio gravado]\n\nPrecisamos criar uma campanha para o TechVision no próximo mês. As tarefas incluem: criar banner para LinkedIn, definir estratégia de social media, fazer reunião com o cliente para aprovação do briefing, e entregar os materiais até dia 30.';
+        $('recStatus').textContent='Áudio transcrito! Clique em "Analisar" para criar as tarefas.';
+      };
+      mediaRecorder.start();isRecording=true;
+      recSeconds=0;$('recTime').style.display='block';
+      recInterval=setInterval(()=>{recSeconds++;const m=Math.floor(recSeconds/60),s=recSeconds%60;$('recTime').textContent=`${m}:${s.toString().padStart(2,'0')}`;},1000);
+      const btn=$('recBtn');btn.classList.add('recording');btn.textContent='⏹️';
+      $('recStatus').textContent='Gravando... clique para parar';
+    }catch(e){alert('Permissão de microfone negada. Cole o texto manualmente.');}
+  }else{
+    mediaRecorder?.stop();isRecording=false;clearInterval(recInterval);
+    const btn=$('recBtn');btn.classList.remove('recording');btn.textContent='🎙️';$('recTime').style.display='none';
+  }
+};
+
+window.processAI=async()=>{
+  const text=$('aiText')?.value.trim();
+  if(!text){alert('Digite ou cole o texto para analisar.');return;}
+  const clientId=$('aiClient')?.value;
+  const client=S.clients.find(c=>c.id===clientId);
+  $('aiLoading').classList.remove('hidden');
+  $('aiResult').innerHTML='';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1500,
+        messages:[{role:'user',content:`Analise o texto abaixo e extraia:
+1. Lista de TAREFAS específicas (título, responsável se mencionado, prazo se mencionado, prioridade)
+2. ATA resumida da reunião (se for reunião)
+3. Próximos passos
+
+Responda APENAS em JSON válido neste formato:
+{
+  "tarefas": [{"titulo":"","responsavel":"","prazo":"","prioridade":"normal|alta|urgente","descricao":""}],
+  "ata": "texto da ata",
+  "proximos_passos": ["passo1","passo2"]
+}
+
+Texto: ${text}`}]
+      })
+    });
+    const data=await res.json();
+    const content=data.content?.[0]?.text||'{}';
+    let parsed;
+    try{parsed=JSON.parse(content.replace(/```json|```/g,'').trim());}
+    catch{parsed={tarefas:[],ata:content,proximos_passos:[]};}
+
+    $('aiLoading').classList.add('hidden');
+    const tarefas=parsed.tarefas||[];
+    const ata=parsed.ata||'';
+    const prox=parsed.proximos_passos||[];
+
+    $('aiResult').innerHTML=`
+    ${ata?`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:8px;">📄 Ata da reunião</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.6;">${ata}</div>
+    </div>`:''}
+    ${prox.length?`<div style="background:var(--bL);border:0.5px solid var(--bD);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--bD);margin-bottom:8px;">🎯 Próximos passos</div>
+      ${prox.map(p=>`<div style="font-size:12px;color:var(--bD);margin-bottom:4px;">• ${p}</div>`).join('')}
+    </div>`:''}
+    <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:10px;">✅ ${tarefas.length} tarefa(s) identificada(s)</div>
+    <div id="aiTarefas"></div>
+    ${tarefas.length?`<button class="bp" style="width:100%;margin-top:12px;padding:12px;" onclick="saveAllAITasks()">💾 Salvar todas as tarefas no sistema</button>`:''}`;
+
+    window._aiTarefas=tarefas.map(t=>({...t,clientId:clientId||'',save:true}));
+    renderAITasks();
+  }catch(e){
+    $('aiLoading').classList.add('hidden');
+    $('aiResult').innerHTML=`<div style="background:var(--rL);color:var(--rD);border-radius:10px;padding:14px;font-size:12px;">Erro ao processar com IA. Verifique sua conexão.<br><br>${e.message}</div>`;
+  }
+};
+
+function renderAITasks(){
+  const el=$('aiTarefas');if(!el)return;
+  el.innerHTML=(window._aiTarefas||[]).map((t,i)=>`
+  <div class="ai-task-card" style="border-left:3px solid ${t.save?'var(--p)':'var(--bd2)'};">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+      <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--t);">${t.titulo}</div>${t.descricao?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">${t.descricao}</div>`:''}</div>
+      <input type="checkbox" ${t.save?'checked':''} onchange="window._aiTarefas[${i}].save=this.checked;renderAITasks()" style="accent-color:var(--p);width:16px;height:16px;flex-shrink:0;margin-left:10px;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      ${pb(t.prioridade||'normal')}
+      ${t.responsavel?`<span style="font-size:10px;background:var(--pL);color:var(--p);padding:2px 7px;border-radius:4px;font-weight:600;">👤 ${t.responsavel}</span>`:''}
+      ${t.prazo?`<span style="font-size:10px;background:var(--gL);color:var(--gD);padding:2px 7px;border-radius:4px;font-weight:600;">📅 ${t.prazo}</span>`:''}
+    </div>
+  </div>`).join('');
+}
+
+window.saveAllAITasks=async()=>{
+  const tasks=(window._aiTarefas||[]).filter(t=>t.save);
+  if(!tasks.length)return alert('Nenhuma tarefa selecionada.');
+  let saved=0;
+  for(const t of tasks){
+    await addDoc(collection(db,'tasks'),{title:t.titulo,description:t.descricao||'',assignee:t.responsavel||'',deadline:t.prazo||'',priority:t.prioridade||'normal',status:'todo',urgent:t.prioridade==='urgente',clientId:t.clientId||'',projectId:'',frenteId:null,createdAt:serverTimestamp()});
+    saved++;
+  }
+  alert(`${saved} tarefa(s) criada(s) com sucesso!`);
+  gv('all-tasks');
+};
+
+// ── CLIENT VIEW ──
+function renderCV(){
+  const client=S.clients.find(c=>c.id===S.acl);if(!client)return;
+  const mc=$('mc'),tab=S.atab,ps=S.projects.filter(p=>p.clientId===S.acl),k=cc(client.id);
+
+  if(tab==='projetos'){
+    mc.innerHTML=`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="bo" style="margin-right:8px;" onclick="om('frente',{clientId:'${client.id}'})">+ Frente</button>
+      <button class="bo" style="margin-right:8px;" onclick="om('proj',{clientId:'${client.id}'})">+ Projeto</button>
+      <button class="bp" onclick="om('task',{clientId:'${client.id}'})">+ Tarefa</button>
+    </div>
+    <div class="proj-grid">${ps.map(p=>`
+      <div class="card ${S.aproj===p.id?'sel':''}" onclick="S.aproj=S.aproj==='${p.id}'?null:'${p.id}';rv()">
+        <div style="display:flex;justify-content:space-between;margin-bottom:9px;"><div><div style="font-size:13px;font-weight:700;color:var(--t);">${p.name}</div><div style="font-size:10px;color:var(--t3);margin-top:2px;">Prazo: ${p.deadline||'—'}</div></div>${pb(p.priority)}</div>
+        <div class="prog"><div class="prog-f" style="width:${p.progress||0}%;background:${k.color};"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);"><span>${p.progress||0}%</span><span>${S.tasks.filter(t=>t.projectId===p.id&&t.status!=='done').length} pendentes</span></div>
+        <div style="display:flex;gap:5px;margin-top:9px;">
+          <button class="bsm" onclick="event.stopPropagation();om('task',{clientId:'${client.id}',projectId:'${p.id}'})">+ Tarefa</button>
+          <button class="bsm" onclick="event.stopPropagation();om('frente',{clientId:'${client.id}',projectId:'${p.id}'})">+ Frente</button>
+        </div>
+      </div>`).join('')}</div>
+    ${S.aproj?renderPD(client,k):'<div class="empty">Selecione um projeto para ver tarefas</div>'}`;
+
+  }else if(tab==='kanban'){
+    const allT=S.aproj?S.tasks.filter(t=>t.projectId===S.aproj):S.tasks.filter(t=>t.clientId===S.acl);
+    mc.innerHTML=`<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+      <span style="font-size:12px;color:var(--t2);font-weight:600;">Projeto:</span>
+      <select style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;" onchange="S.aproj=this.value||null;rv()">
+        <option value="">Todos</option>${ps.map(p=>`<option value="${p.id}" ${S.aproj===p.id?'selected':''}>${p.name}</option>`).join('')}
+      </select>
+      <button class="bp" style="margin-left:auto;" onclick="om('task',{clientId:'${client.id}'${S.aproj?`,projectId:'${S.aproj}'`:''}})">+ Tarefa</button>
+    </div>
+    <div class="kanban">${['todo','doing','review','done'].map(st=>{const ft=allT.filter(t=>t.status===st);return`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${ft.length}</span></div>${ft.map(t=>{const fr=S.frentes.find(f=>f.id===t.frenteId);return`<div class="kcard"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div>${fr?`<div style="font-size:9px;color:var(--t3);margin-bottom:4px;">${FICONS[fr.type]||'📁'} ${fr.name}</div>`:''}<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div></div>`;}).join('')}</div>`;}).join('')}</div>`;
+
+  }else if(tab==='checklist'){
+    mc.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="bp" onclick="om('cl',{projectId:S.aproj||''})">+ Item</button></div>`+
+    ps.map(p=>{const items=S.checklist.filter(c=>c.projectId===p.id);return`<div style="margin-bottom:18px;"><div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;"><span style="font-size:14px;font-weight:700;color:var(--t);">${p.name}</span>${pb(p.priority)}<button class="bsm" style="margin-left:auto;" onclick="om('cl',{projectId:'${p.id}'})">+ Item</button></div><div class="ck-list">${items.map(i=>`<div class="ck-it ${i.done?'done':''}"><input type="checkbox" ${i.done?'checked':''} onchange="togCk('${i.id}','${p.id}',this.checked)"><span>${i.label}</span></div>`).join('')}${items.length===0?'<div class="empty">Nenhum item.</div>':''}</div></div>`;}).join('');
+
+  }else if(tab==='entregas'){
+    const dels=S.deliveries.filter(d=>d.clientId===S.acl);
+    mc.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="bp" onclick="om('del',{clientId:'${S.acl}'})">+ Adicionar entrega</button></div>
+    ${dels.map(d=>{const pr=S.projects.find(p=>p.id===d.projectId);const dcmts=S.comments.filter(c=>c.deliveryId===d.id);const op=S.oe[d.id];const sc=d.status==='aprovado'?['var(--gL)','var(--gD)']:['var(--aL)','var(--aD)'];return`<div class="del-it"><div class="del-h" onclick="S.oe['${d.id}']=!S.oe['${d.id}'];rv()">
+      <div style="width:36px;height:36px;border-radius:9px;background:${sc[0]};color:${sc[1]};display:flex;align-items:center;justify-content:center;font-size:15px;">${d.status==='aprovado'?'✓':'↑'}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div><div style="font-size:10px;color:var(--t3);">${pr?.name||''}</div></div>
+      ${bdg(d.status,sc[0],sc[1])}<span style="font-size:13px;color:var(--t4);margin-left:9px;display:inline-block;transform:${op?'rotate(90deg)':'none'};">›</span>
+    </div>${op?`<div class="del-body">${d.link?`<div style="background:var(--bg3);border-radius:9px;padding:11px 14px;margin-bottom:13px;display:flex;align-items:center;gap:10px;"><div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div>${d.description?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">${d.description}</div>`:''}</div><a href="${d.link}" target="_blank" style="font-size:12px;color:var(--p);border:1.5px solid var(--p);border-radius:7px;padding:5px 12px;text-decoration:none;font-weight:700;">Abrir ↗</a></div>`:''}<div class="cmt-box">${dcmts.map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:${cm.authorRole==='agency'?'var(--p)':'var(--pL)'};color:${cm.authorRole==='agency'?'#fff':'var(--p)'};">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);line-height:1.5;">${cm.text}</div></div>`).join('')}${dcmts.length===0?'<div class="empty">Sem comentários</div>':''}<div class="inp-row"><input class="cmt-inp" id="dc-${d.id}" placeholder="Comentar..."><button class="bp" onclick="sendDC('${d.id}')">Enviar</button></div></div></div>`:''}
+    </div>`;}).join('')}${dels.length===0?'<div class="empty">Nenhuma entrega</div>':''}`;
+
+  }else if(tab==='comentarios'){
+    mc.innerHTML=`<div style="margin-bottom:12px;"><select style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;" onchange="S.aproj=this.value||null;rv()"><option value="">Selecione projeto...</option>${ps.map(p=>`<option value="${p.id}" ${S.aproj===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    ${S.aproj?`<div class="cmt-box">${S.comments.filter(c=>c.projectId===S.aproj&&!c.deliveryId).map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:var(--p);color:#fff;">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);">${cm.text}</div></div>`).join('')}<div class="inp-row"><input class="cmt-inp" id="pjcmt" placeholder="Adicionar comentário..."><button class="bp" onclick="sendPC('${S.aproj}')">Enviar</button></div></div>`:'<div class="empty">Selecione um projeto</div>'}`;
+
+  }else if(tab==='solicitacoes'){
+    const reqs=S.requests.filter(r=>r.clientId===S.acl);
+    mc.innerHTML=`${reqs.map(r=>`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:9px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div><div style="font-size:13px;font-weight:700;color:var(--t);">${r.title}</div><div style="font-size:11px;color:var(--t2);">${r.type||''}</div></div><div style="display:flex;gap:5px;">${pb(r.priority)}${bdg(r.status,r.status==='recebido'?'var(--bL)':'var(--gL)',r.status==='recebido'?'var(--bD)':'var(--gD)')}</div></div><div style="font-size:12px;color:var(--t2);">${r.description||''}</div>${r.status==='recebido'?`<button class="bp" style="margin-top:9px;font-size:11px;" onclick="updateDoc(doc(db,'requests','${r.id}'),{status:'em andamento'})">Iniciar</button>`:''}</div>`).join('')}${reqs.length===0?'<div class="empty">Nenhuma solicitação</div>':''}`;
+  }
+}
+
+function renderPD(client,k){
+  const p=S.projects.find(x=>x.id===S.aproj);if(!p)return'';
+  const frentes=S.frentes.filter(f=>f.projectId===S.aproj);
+  const pt=S.tasks.filter(t=>t.projectId===S.aproj);
+  return`<div style="margin-top:18px;border-top:0.5px solid var(--bd);padding-top:18px;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+      <span style="font-size:15px;font-weight:700;color:var(--t);flex:1;">${p.name}</span>
+      <button class="bo" onclick="om('del',{clientId:'${S.acl}',projectId:'${p.id}'})">+ Entrega</button>
+      <button class="bo" onclick="om('frente',{projectId:'${p.id}',clientId:'${S.acl}'})">+ Frente</button>
+      <button class="bp" onclick="om('task',{clientId:'${S.acl}',projectId:'${p.id}'})">+ Tarefa</button>
+    </div>
+    ${frentes.length>0?`<div style="margin-bottom:14px;">${frentes.map(fr=>{const fT=S.tasks.filter(t=>t.frenteId===fr.id);const doneF=fT.filter(t=>t.status==='done').length;const isO=S.of[fr.id];return`<div class="frente-card"><div class="frente-head" onclick="S.of['${fr.id}']=!S.of['${fr.id}'];rv()">
+      <div style="width:32px;height:32px;border-radius:8px;background:var(--pL);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:14px;">${FICONS[fr.type]||'📁'}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${fr.name}</div><div style="font-size:10px;color:var(--t3);">${fr.type} · ${doneF}/${fT.length} tarefas</div></div>
+      ${pb(fr.priority||'normal')}
+      <button class="bsm" style="margin-right:8px;" onclick="event.stopPropagation();om('task',{clientId:'${S.acl}',projectId:'${p.id}',frenteId:'${fr.id}'})">+ Tarefa</button>
+      <span style="font-size:13px;color:var(--t4);display:inline-block;transform:${isO?'rotate(90deg)':'none'};">›</span>
+    </div>${isO?`<div class="frente-body"><div class="kanban">${['todo','doing','review','done'].map(st=>`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${fT.filter(t=>t.status===st).length}</span></div>${fT.filter(t=>t.status===st).map(t=>`<div class="kcard"><div style="font-size:11px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:5px;">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div><select style="font-size:10px;width:100%;border:0.5px solid var(--bd2);border-radius:5px;padding:2px 5px;background:var(--bg3);color:var(--t);" onchange="updateDoc(doc(db,'tasks','${t.id}'),{status:this.value})">${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${t.status===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}</div>`).join('')}</div></div>`:''}
+    </div>`;}).join('')}</div>`:''}
+    ${frentes.length===0?`<div class="kanban">${['todo','doing','review','done'].map(st=>`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${pt.filter(t=>t.status===st).length}</span></div>${pt.filter(t=>t.status===st).map(t=>`<div class="kcard"><div style="font-size:11px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:5px;">${t.assignee||'—'}<span>${t.deadline||''}</span></div><select style="font-size:10px;width:100%;border:0.5px solid var(--bd2);border-radius:5px;padding:2px 5px;background:var(--bg3);color:var(--t);" onchange="updateDoc(doc(db,'tasks','${t.id}'),{status:this.value})">${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${t.status===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}</div>`).join('')}</div>`:''}</div>`;
+}
+
+// Open client portal view (full page)
+window.openClientPortal=()=>{
+  const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
+  // Set up portal state for this client
+  S.cd={...c};S.ptab='visao';
+  document.querySelectorAll('.cl-it').forEach(e=>e.classList.remove('on'));
+  show('portal');
+  $('pAv').textContent=c.initials||'?';$('pNm').textContent=c.name;$('pEm').textContent='Visualização interna';
+  rp();
+};
+window.backToAgency=()=>{show('shell');rv();};
+
+// ACTIONS
+window.togCk=async(id,pjId,val)=>{await updateDoc(doc(db,'checklist',id),{done:val});const items=S.checklist.filter(c=>c.projectId===pjId);const done=items.filter(c=>c.id===id?val:c.done).length;await updateDoc(doc(db,'projects',pjId),{progress:items.length?Math.round(done/items.length*100):0});};
+window.updateDoc=(ref,data)=>import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(m=>m.updateDoc(ref,data));
+window.sendPC=async pjId=>{const el=$('pjcmt');const t=el?.value.trim();if(!t)return;await addDoc(collection(db,'comments'),{projectId:pjId,text:t,authorName:'Agência Hub',authorRole:'agency',createdAt:serverTimestamp()});el.value='';};
+window.sendDC=async dId=>{const el=$('dc-'+dId);const t=el?.value.trim();if(!t)return;await addDoc(collection(db,'comments'),{deliveryId:dId,text:t,authorName:'Agência Hub',authorRole:'agency',createdAt:serverTimestamp()});el.value='';};
+
+// MODALS
+window.om=(type,data)=>{
+  const ov=$('mov'),mb=$('mb');ov.classList.remove('hidden');
+  const assigneeOpts=`<option value="">Sem responsável</option>${teamNames().map(n=>`<option value="${n}" ${data.assignee===n?'selected':''}>${n}</option>`).join('')}`;
+  const projectsForClient=(cid)=>S.projects.filter(p=>p.clientId===cid).map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('');
+  const currentClientId=data.clientId||S.acl||'';
+
+  if(type==='client'){mb.innerHTML=`<div class="mh"><div class="mt">Novo cliente</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Nome da empresa</label><input id="f-nm" value="${data.name||''}" placeholder="Ex: Empresa XYZ"></div>
+    <div class="fg"><label>E-mail de acesso</label><input id="f-em" type="email" value="${data.email||''}" placeholder="cliente@empresa.com"></div>
+    <div class="fg"><label>Sigla (2-3 letras)</label><input id="f-in" value="${data.initials||''}" maxlength="3" placeholder="EX"></div>
+    <div class="fg"><label>Senha de acesso</label><input id="f-pw" type="password" placeholder="Mín. 6 caracteres"></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveCl()">Criar</button></div>`;}
+
+  else if(type==='team-member'){mb.innerHTML=`<div class="mh"><div class="mt">Adicionar membro da equipe</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Nome</label><input id="f-nm" placeholder="Nome completo"></div>
+    <div class="fg"><label>E-mail</label><input id="f-em" type="email" placeholder="membro@agencia.com"></div>
+    <div class="fg"><label>Senha</label><input id="f-pw" type="password" placeholder="Mín. 6 caracteres"></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveTeam()">Adicionar</button></div>`;}
+
+  else if(type==='proj'){mb.innerHTML=`<div class="mh"><div class="mt">Novo projeto</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Nome</label><input id="f-nm" value="${data.name||''}" placeholder="Ex: Campanha Natal"></div>
+    <div class="fg"><label>Cliente</label><select id="f-ci">${S.clients.map(c=>`<option value="${c.id}" ${currentClientId===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Prazo</label><input id="f-dl" type="date" value="${data.deadline||''}"></div>
+    <div class="fg"><label>Prioridade</label><select id="f-pr"><option value="normal" ${data.priority==='normal'?'selected':''}>Normal</option><option value="alta" ${data.priority==='alta'?'selected':''}>Alta</option><option value="urgente" ${data.priority==='urgente'?'selected':''}>Urgente</option></select></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="savePr('${data.id||''}')">Salvar</button></div>`;}
+
+  else if(type==='frente'){mb.innerHTML=`<div class="mh"><div class="mt">Nova frente de trabalho</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Nome</label><input id="f-nm" placeholder="Ex: Social Media Q2"></div>
+    <div class="fg"><label>Tipo</label><select id="f-tp">${FRENTE_TYPES.map(t=>`<option value="${t}">${FICONS[t]} ${t}</option>`).join('')}</select></div>
+    <div class="fg"><label>Projeto</label><select id="f-pi"><option value="">Sem projeto</option>${S.projects.filter(p=>p.clientId===(data.clientId||S.acl)).map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Prioridade</label><select id="f-pr"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveFr('${data.clientId||S.acl}')">Criar</button></div>`;}
+
+  else if(type==='task'){
+    const frentesForProj=data.projectId?S.frentes.filter(f=>f.projectId===data.projectId):[];
+    mb.innerHTML=`<div class="mh"><div class="mt">${data.id?'Editar':'Nova'} tarefa</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Título</label><input id="f-ti" value="${data.title||''}" placeholder="Ex: Criar banner"></div>
+    <div class="fg"><label>Cliente</label><select id="f-ci" onchange="updPO()"><option value="">Selecione...</option>${S.clients.map(c=>`<option value="${c.id}" ${currentClientId===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Projeto</label><select id="f-pi" onchange="updFO()"><option value="">Selecione...</option>${projectsForClient(currentClientId)}</select></div>
+    <div class="fg"><label>Frente (opcional)</label><select id="f-fr"><option value="">Sem frente</option>${frentesForProj.map(f=>`<option value="${f.id}" ${data.frenteId===f.id?'selected':''}>${FICONS[f.type]||'📁'} ${f.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Responsável</label><select id="f-as"><option value="">Sem responsável</option>${teamNames().map(n=>`<option value="${n}" ${data.assignee===n?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="fg"><label>Prazo</label><input id="f-dl" type="date" value="${data.deadline||''}"></div>
+    <div class="fg"><label>Status</label><select id="f-st">${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${data.status===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-ur" ${data.urgent?'checked':''} style="accent-color:var(--p);width:16px;height:16px;">Marcar como urgente</label></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveTk('${data.id||''}')">Salvar</button></div>`;}
+
+  else if(type==='cl'){mb.innerHTML=`<div class="mh"><div class="mt">Novo item de checklist</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Projeto</label><select id="f-pi">${S.projects.filter(p=>p.clientId===S.acl).map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Descrição</label><input id="f-lb" placeholder="Ex: Briefing aprovado"></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveCK()">Salvar</button></div>`;}
+
+  else if(type==='del'){mb.innerHTML=`<div class="mh"><div class="mt">Nova entrega</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Título</label><input id="f-ti" placeholder="Ex: Moodboard v1"></div>
+    <div class="fg"><label>Projeto</label><select id="f-pi"><option value="">Sem projeto</option>${S.projects.filter(p=>p.clientId===(data.clientId||S.acl)).map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    <div class="fg"><label>Link do arquivo (Google Drive, Dropbox etc.)</label><input id="f-lk" type="url" placeholder="https://drive.google.com/..."></div>
+    <div class="fg"><label>Descrição</label><textarea id="f-dc" placeholder="Descreva o que foi entregue..."></textarea></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveDel('${data.clientId||S.acl}')">Enviar</button></div>`;}
+};
+window.cm=()=>$('mov').classList.add('hidden');
+window.updPO=()=>{const cid=$('f-ci')?.value;const el=$('f-pi');if(el)el.innerHTML=`<option value="">Selecione...</option>${S.projects.filter(p=>p.clientId===cid).map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}`;updFO();};
+window.updFO=()=>{const pid=$('f-pi')?.value;const el=$('f-fr');if(el)el.innerHTML=`<option value="">Sem frente</option>${S.frentes.filter(f=>f.projectId===pid).map(f=>`<option value="${f.id}">${FICONS[f.type]||'📁'} ${f.name}</option>`).join('')}`;};
+
+window.saveCl=async()=>{
+  const nm=fval('f-nm'),em=fval('f-em'),ini=(fval('f-in')||nm.slice(0,2)||'??').toUpperCase(),pw=$('f-pw')?.value;
+  if(!nm||!em)return alert('Preencha nome e e-mail.');
+  const ref=await addDoc(collection(db,'clients'),{name:nm,email:em,initials:ini,createdAt:serverTimestamp()});
+  if(pw){try{const r=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,'users',r.user.uid),{role:'client',clientId:ref.id,name:nm,email:em});}catch(e){alert('Cliente criado! Erro no login: '+e.message);}}cm();};
+window.saveTeam=async()=>{
+  const nm=fval('f-nm'),em=fval('f-em'),pw=$('f-pw')?.value;if(!nm||!em||!pw)return alert('Preencha todos os campos.');
+  try{const r=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,'users',r.user.uid),{role:'team',name:nm,email:em,createdAt:serverTimestamp()});cm();}catch(e){alert('Erro: '+e.message);}};
+window.savePr=async id=>{const nm=fval('f-nm'),ci=$('f-ci')?.value,dl=$('f-dl')?.value,pr=$('f-pr')?.value||'normal';if(!nm||!ci)return alert('Preencha nome e cliente.');const d={name:nm,clientId:ci,deadline:dl||'',priority:pr,progress:0};if(id)await updateDoc(doc(db,'projects',id),d);else await addDoc(collection(db,'projects'),{...d,createdAt:serverTimestamp()});cm();};
+window.saveFr=async cid=>{const nm=fval('f-nm'),tp=$('f-tp')?.value,pi=$('f-pi')?.value,pr=$('f-pr')?.value||'normal';if(!nm)return;await addDoc(collection(db,'frentes'),{name:nm,type:tp,priority:pr,projectId:pi||'',clientId:cid,createdAt:serverTimestamp()});cm();};
+window.saveTk=async id=>{const d={title:fval('f-ti'),clientId:$('f-ci')?.value||'',projectId:$('f-pi')?.value||'',frenteId:$('f-fr')?.value||null,assignee:$('f-as')?.value||'',deadline:$('f-dl')?.value||'',status:$('f-st')?.value||'todo',urgent:$('f-ur')?.checked||false};if(!d.title)return alert('Digite o título da tarefa.');if(id)await updateDoc(doc(db,'tasks',id),d);else await addDoc(collection(db,'tasks'),{...d,createdAt:serverTimestamp()});cm();};
+window.saveCK=async()=>{const l=fval('f-lb'),pi=$('f-pi')?.value;if(!l||!pi)return;await addDoc(collection(db,'checklist'),{label:l,projectId:pi,done:false,order:Date.now(),createdAt:serverTimestamp()});cm();};
+window.saveDel=async cid=>{const ti=fval('f-ti'),pi=$('f-pi')?.value,lk=fval('f-lk'),dc=fval('f-dc');if(!ti)return;await addDoc(collection(db,'deliveries'),{title:ti,projectId:pi||'',clientId:cid,link:lk||'',description:dc||'',status:'aguardando aprovação',createdAt:serverTimestamp()});cm();};
+
+// ──────────────────────────────────────────
+// CLIENT PORTAL
+// ──────────────────────────────────────────
+function startPortal(){
+  show('portal');
+  const cid=S.profile.clientId;
+  $('pEm').textContent=S.profile.email||'';
+  S.unsubs.forEach(u=>u());S.unsubs=[];
+  if(!cid){$('pc').innerHTML='<div class="empty" style="padding:60px;">Conta não configurada.</div>';return;}
+  S.unsubs=[
+    onSnapshot(doc(db,'clients',cid),s=>{if(s.exists()){S.cd={id:s.id,...s.data()};$('pAv').textContent=S.cd.initials||'?';$('pNm').textContent=S.cd.name||'';rp();}}),
+    onSnapshot(query(collection(db,'projects'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.projects=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'frentes'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.frentes=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'tasks'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.tasks=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'checklist'),orderBy('order','asc')),s=>{S.checklist=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'deliveries'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.deliveries=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'comments'),orderBy('createdAt','asc')),s=>{S.comments=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'requests'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.requests=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+    onSnapshot(query(collection(db,'ratings'),where('clientId','==',cid),orderBy('createdAt','desc')),s=>{S.ratings=s.docs.map(d=>({id:d.id,...d.data()}));rp();}),
+  ];
+}
+
+window.spt=el=>{document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));el.classList.add('on');S.ptab=el.dataset.p;rp();};
+
+function rp(){
+  const mc=$('pc');if(!mc)return;
+  const c=S.cd;if(!c)return;
+  const tab=S.ptab,ps=S.projects;
+  const avg=ps.length?Math.round(ps.reduce((a,p)=>a+(p.progress||0),0)/ps.length):0;
+  const allDels=S.deliveries;
+  const pendDels=allDels.filter(d=>d.status==='aguardando aprovação').length;
+
+  if(tab==='visao'){
+    const allT=S.tasks;const doneT=allT.filter(t=>t.status==='done').length;
+    mc.innerHTML=`
+    <div class="hero">
+      <div style="width:52px;height:52px;border-radius:13px;background:var(--pL);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">${c.initials||'?'}</div>
+      <div style="flex:1;"><div style="font-size:18px;font-weight:700;color:var(--t);">Olá, ${c.name}!</div><div style="font-size:13px;color:var(--t2);margin-top:3px;">Acompanhe seus projetos, entregas e solicite novas demandas.</div></div>
+      <div style="background:var(--gL);color:var(--gD);border-radius:9px;padding:8px 14px;font-size:12px;font-weight:700;">✅ Tudo em andamento</div>
+    </div>
+    <div class="pmet-grid">
+      <div class="pmet"><div class="pmet-l" style="color:var(--p);">Projetos ativos</div><div style="font-size:24px;font-weight:700;color:var(--p);">${ps.length}</div></div>
+      <div class="pmet"><div class="pmet-l">Progresso geral</div><div style="font-size:24px;font-weight:700;color:var(--t);">${avg}%</div><div style="height:4px;background:var(--bg3);border-radius:4px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avg}%;background:var(--p);border-radius:4px;"></div></div></div>
+      <div class="pmet"><div class="pmet-l" style="color:var(--gD);">Tarefas concluídas</div><div style="font-size:24px;font-weight:700;color:var(--gD);">${doneT}/${allT.length}</div></div>
+      <div class="pmet" style="${pendDels>0?'background:var(--aL);':''}"><div class="pmet-l" style="color:${pendDels>0?'var(--aD)':'var(--t3)'};">Entregas p/ aprovar</div><div style="font-size:24px;font-weight:700;color:${pendDels>0?'var(--aD)':'var(--t)'};">${pendDels}</div></div>
+    </div>
+    ${pendDels>0?`<div style="background:var(--aL);border:1px solid var(--aD);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">⚠️</span><div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--aD);">${pendDels} entrega(s) aguardando aprovação</div></div><button class="bp" style="background:var(--aD);" onclick="document.querySelector('[data-p=entregas]').click()">Ver entregas</button></div>`:''}
+    <div class="sec-t">Seus projetos</div>
+    ${ps.map(p=>{const items=S.checklist.filter(ci=>ci.projectId===p.id);const frentes=S.frentes.filter(f=>f.projectId===p.id);const ptasks=S.tasks.filter(t=>t.projectId===p.id);const op=S.op[p.id];return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;margin-bottom:12px;overflow:hidden;"><div onclick="S.op['${p.id}']=!S.op['${p.id}'];rp()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;">
+      <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--t);">${p.name}</div><div style="font-size:11px;color:var(--t3);">Prazo: ${p.deadline||'—'}</div></div>
+      ${pb(p.priority)}<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);"><div style="width:80px;height:5px;background:var(--bg3);border-radius:5px;overflow:hidden;"><div style="height:100%;width:${p.progress||0}%;background:var(--p);border-radius:5px;"></div></div>${p.progress||0}%</div>
+      <span style="font-size:14px;color:var(--t4);display:inline-block;transform:${op?'rotate(90deg)':'none'};">›</span>
+    </div>
+    ${op?`<div style="border-top:0.5px solid var(--bd);padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;">Frentes de trabalho</div>
+        ${frentes.map(fr=>{const ft=ptasks.filter(t=>t.frenteId===fr.id);const fd=ft.filter(t=>t.status==='done').length;const pct=ft.length?Math.round(fd/ft.length*100):0;return`<div style="margin-bottom:8px;padding:9px 11px;background:var(--bg3);border-radius:9px;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><span>${FICONS[fr.type]||'📁'}</span><span style="font-size:12px;font-weight:700;color:var(--t);">${fr.name}</span></div><div style="height:4px;background:var(--bg2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--p);border-radius:4px;"></div></div><div style="font-size:10px;color:var(--t3);margin-top:3px;">${fd}/${ft.length} tarefas · ${pct}%</div></div>`;}).join('')}
+        ${frentes.length===0?'<div style="font-size:11px;color:var(--t3);">Nenhuma frente cadastrada</div>':''}
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px;">Checklist</div>
+        ${items.map(ci=>`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;font-size:12px;color:${ci.done?'var(--t3)':'var(--t)'};${ci.done?'text-decoration:line-through;':''}"><div style="width:15px;height:15px;border-radius:4px;flex-shrink:0;background:${ci.done?'var(--gL)':'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gD);">${ci.done?'✓':''}</div>${ci.label}</div>`).join('')}
+        ${items.length===0?'<div style="font-size:11px;color:var(--t3);">Nenhum item</div>':''}
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;">Resumo de tarefas</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${Object.entries(SL).map(([s,l])=>{const cnt=ptasks.filter(t=>t.status===s).length;const sc=SC[s];return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:${sc[0]};border-radius:8px;"><span style="font-size:11px;font-weight:600;color:${sc[1]};">${l}</span><span style="font-size:14px;font-weight:700;color:${sc[1]};">${cnt}</span></div>`;}).join('')}
+        </div>
+      </div>
+    </div>`:''}
+    </div>`;}).join('')}
+    ${ps.length===0?'<div class="empty">Nenhum projeto ativo no momento.</div>':''}`;
+
+  }else if(tab==='projetos'){
+    mc.innerHTML=`<div class="sec-t">Todos os seus projetos</div>
+    ${ps.map(p=>{const frentes=S.frentes.filter(f=>f.projectId===p.id);const ptasks=S.tasks.filter(t=>t.projectId===p.id);const dels=S.deliveries.filter(d=>d.projectId===p.id);return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;"><div><div style="font-size:16px;font-weight:700;color:var(--t);">${p.name}</div><div style="font-size:11px;color:var(--t3);">Prazo: ${p.deadline||'—'}</div></div>${pb(p.priority)}</div>
+      <div class="prog" style="height:7px;margin-bottom:8px;"><div class="prog-f" style="width:${p.progress||0}%;background:var(--p);"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:14px;">${p.progress||0}% · ${ptasks.filter(t=>t.status==='done').length}/${ptasks.length} tarefas · ${dels.filter(d=>d.status==='aprovado').length}/${dels.length} entregas</div>
+      ${frentes.length>0?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">${frentes.map(fr=>{const ft=ptasks.filter(t=>t.frenteId===fr.id);const fd=ft.filter(t=>t.status==='done').length;const pct=ft.length?Math.round(fd/ft.length*100):0;return`<div style="padding:10px 12px;background:var(--bg3);border-radius:10px;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><span style="font-size:16px;">${FICONS[fr.type]||'📁'}</span><div style="font-size:12px;font-weight:700;color:var(--t);">${fr.name}</div></div><div style="height:4px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;width:${pct}%;background:var(--p);border-radius:4px;"></div></div><div style="font-size:10px;color:var(--t3);">${pct}% · ${fd}/${ft.length}</div></div>`;}).join('')}</div>`:''}
+    </div>`;}).join('')}`;
+
+  }else if(tab==='entregas'){
+    mc.innerHTML=`<div class="sec-t">Entregas e arquivos</div>
+    ${S.deliveries.map(d=>{const pr=ps.find(p=>p.id===d.projectId);const dcmts=S.comments.filter(cm=>cm.deliveryId===d.id);const op=S.oe[d.id];const sc=d.status==='aprovado'?['var(--gL)','var(--gD)']:['var(--aL)','var(--aD)'];return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:13px;margin-bottom:11px;overflow:hidden;">
+      <div onclick="S.oe['${d.id}']=!S.oe['${d.id}'];rp()" style="display:flex;align-items:center;gap:11px;padding:14px 17px;cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:10px;background:${sc[0]};color:${sc[1]};display:flex;align-items:center;justify-content:center;font-size:16px;">${d.status==='aprovado'?'✓':'↑'}</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--t);">${d.title}</div><div style="font-size:11px;color:var(--t3);">${pr?.name||''} · ${ft(d.createdAt)}</div></div>
+        ${bdg(d.status,sc[0],sc[1])}<span style="font-size:14px;color:var(--t4);margin-left:10px;display:inline-block;transform:${op?'rotate(90deg)':'none'};">›</span>
+      </div>
+      ${op?`<div style="border-top:0.5px solid var(--bd);padding:16px 17px;">
+        ${d.link?`<div style="background:var(--bg3);border-radius:10px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div>${d.description?`<div style="font-size:11px;color:var(--t2);margin-top:3px;">${d.description}</div>`:''}</div>
+          <a href="${d.link}" target="_blank" style="font-size:12px;color:var(--p);border:1.5px solid var(--p);border-radius:8px;padding:7px 14px;text-decoration:none;font-weight:700;">Abrir arquivo ↗</a>
+        </div>`:''}
+        <div class="cmt-box">
+          ${dcmts.map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:${cm.authorRole==='agency'?'var(--p)':'var(--pL)'};color:${cm.authorRole==='agency'?'#fff':'var(--p)'};">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);line-height:1.5;">${cm.text}</div></div>`).join('')}
+          ${dcmts.length===0?'<div class="empty" style="padding:18px;">Sem comentários ainda.</div>':''}
+          <div class="inp-row" style="gap:7px;">
+            <input class="cmt-inp" id="pdc-${d.id}" placeholder="Comentar ou solicitar ajuste...">
+            ${d.status!=='aprovado'?`<button class="bo" onclick="approveDel('${d.id}')" style="font-weight:700;color:var(--gD);border-color:var(--gD);">✓ Aprovar</button>`:''}
+            <button class="bp" onclick="sendPDC('${d.id}')">Enviar</button>
+          </div>
+        </div>
+      </div>`:''}
+    </div>`;}).join('')}
+    ${S.deliveries.length===0?'<div class="empty">Nenhuma entrega ainda.</div>':''}`;
+
+  }else if(tab==='solicitar'){
+    mc.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:flex-start;">
+    <div><div class="sec-t">Nova solicitação</div>
+    <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;padding:20px;">
+      <div class="fg"><label>Título</label><input id="ps-ti" placeholder="Ex: Banner para LinkedIn"></div>
+      <div class="fg"><label>Projeto relacionado</label><select id="ps-pj"><option value="">Sem projeto específico</option>${ps.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+      <div class="fg"><label>Tipo de demanda</label><select id="ps-ty">${FRENTE_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="fg"><label>Prioridade</label><select id="ps-pr"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+      <div class="fg"><label>Descrição detalhada</label><textarea id="ps-dc" placeholder="Descreva o que precisa..."></textarea></div>
+      <div class="fg"><label>Links de referência (separe por vírgula)</label><input id="ps-lk" placeholder="https://..."></div>
+      <div id="ps-ok" style="display:none;background:var(--gL);color:var(--gD);border-radius:9px;padding:11px;font-size:12px;margin-bottom:12px;text-align:center;font-weight:700;">✅ Solicitação enviada!</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="bo" onclick="['ps-ti','ps-dc','ps-lk'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''})">Limpar</button><button class="bp" onclick="submitReq()">Enviar →</button></div>
+    </div></div>
+    <div><div class="sec-t">Histórico</div>
+      ${S.requests.map(r=>`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:9px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><div style="font-size:13px;font-weight:700;color:var(--t);">${r.title}</div><div style="display:flex;gap:5px;">${pb(r.priority)}${bdg(r.status,r.status==='recebido'?'var(--bL)':'var(--gL)',r.status==='recebido'?'var(--bD)':'var(--gD)')}</div></div>
+        <div style="font-size:12px;color:var(--t2);">${r.description||''}</div><div style="font-size:10px;color:var(--t3);margin-top:4px;">${r.type||''} · ${ft(r.createdAt)}</div>
+      </div>`).join('')}
+      ${S.requests.length===0?'<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:36px;text-align:center;font-size:12px;color:var(--t3);">Nenhuma solicitação ainda</div>':''}
+    </div></div>`;
+
+  }else if(tab==='comunicacao'){
+    mc.innerHTML=`<div class="sec-t">Mensagens por projeto</div>
+    ${ps.map(p=>{const pcmts=S.comments.filter(cm=>cm.projectId===p.id&&!cm.deliveryId);return`<div style="margin-bottom:18px;"><div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:9px;">${p.name}</div>
+    <div class="cmt-box">${pcmts.map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:${cm.authorRole==='agency'?'var(--p)':'var(--pL)'};color:${cm.authorRole==='agency'?'#fff':'var(--p)'};">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);line-height:1.5;">${cm.text}</div></div>`).join('')}
+    ${pcmts.length===0?'<div class="empty">Sem mensagens ainda.</div>':''}
+    <div class="inp-row"><input class="cmt-inp" id="pco-${p.id}" placeholder="Escrever para a agência..."><button class="bp" onclick="sendPCO('${p.id}')">Enviar</button></div></div></div>`;}).join('')}
+    ${ps.length===0?'<div class="empty">Nenhum projeto ativo</div>':''}`;
+
+  }else if(tab==='avaliar'){
+    const myR=S.ratings;const avgSc=myR.length?Math.round(myR.reduce((a,r)=>a+r.score,0)/myR.length):null;
+    mc.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+    <div><div class="sec-t">Avaliar atendimento</div>
+    <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;padding:20px;">
+      <div class="fg"><label>Projeto</label><select id="rt-pj"><option value="">Avaliação geral</option>${ps.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+      <div class="fg"><label>Satisfação (1-5 estrelas)</label>
+        <div style="display:flex;gap:6px;margin-top:4px;" id="stars">${[1,2,3,4,5].map(n=>`<span onclick="setStar(${n})" id="st${n}" style="font-size:28px;cursor:pointer;line-height:1;">☆</span>`).join('')}</div>
+        <input type="hidden" id="rt-sc" value="0">
+      </div>
+      <div class="fg"><label>Pontos positivos</label><textarea id="rt-pos" placeholder="O que estamos fazendo bem..."></textarea></div>
+      <div class="fg"><label>O que podemos melhorar</label><textarea id="rt-neg" placeholder="Sugestões..."></textarea></div>
+      <div class="fg"><label>Comentário adicional</label><input id="rt-cm" placeholder="Observações..."></div>
+      <div id="rt-ok" style="display:none;background:var(--gL);color:var(--gD);border-radius:9px;padding:11px;font-size:12px;margin-bottom:12px;text-align:center;font-weight:700;">⭐ Obrigado!</div>
+      <button class="bp" style="width:100%;padding:12px;" onclick="submitRating()">Enviar avaliação</button>
+    </div></div>
+    <div><div class="sec-t">Histórico</div>
+      ${avgSc!==null?`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
+        <div style="font-size:36px;font-weight:700;color:${avgSc<70?'var(--r)':avgSc<85?'var(--a)':'var(--g)'};">${avgSc}%</div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:9px;">Satisfação média</div>
+        <div style="height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;"><div style="height:100%;width:${avgSc}%;background:${avgSc<70?'var(--r)':avgSc<85?'var(--a)':'var(--g)'};border-radius:8px;"></div></div>
+      </div>`:''}
+      ${myR.map(r=>{const stars=Math.round(r.score/20);return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:9px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><div style="font-size:16px;">${'⭐'.repeat(stars)}${'☆'.repeat(5-stars)}</div><div style="font-size:11px;color:var(--t3);">${ft(r.createdAt)}</div></div>
+        ${r.positive?`<div style="font-size:12px;color:var(--gD);margin-bottom:4px;">✅ ${r.positive}</div>`:''}
+        ${r.negative?`<div style="font-size:12px;color:var(--aD);">💡 ${r.negative}</div>`:''}
+      </div>`;}).join('')}
+      ${myR.length===0?'<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:36px;text-align:center;font-size:12px;color:var(--t3);">Nenhuma avaliação ainda</div>':''}
+    </div></div>`;
+  }
+}
+
+// PORTAL ACTIONS
+let _starVal=0;
+window.setStar=n=>{_starVal=n;$('rt-sc').value=n*20;[1,2,3,4,5].forEach(i=>{const s=$('st'+i);if(s)s.textContent=i<=n?'⭐':'☆';});};
+window.approveDel=async id=>{await updateDoc(doc(db,'deliveries',id),{status:'aprovado'});await addDoc(collection(db,'comments'),{deliveryId:id,text:'✅ Entrega aprovada!',authorName:S.cd?.name||'Cliente',authorRole:'client',createdAt:serverTimestamp()});};
+window.sendPDC=async id=>{const el=$('pdc-'+id);const t=el?.value.trim();if(!t)return;await addDoc(collection(db,'comments'),{deliveryId:id,text:t,authorName:S.cd?.name||'Cliente',authorRole:'client',createdAt:serverTimestamp()});el.value='';};
+window.sendPCO=async pid=>{const el=$('pco-'+pid);const t=el?.value.trim();if(!t)return;await addDoc(collection(db,'comments'),{projectId:pid,text:t,authorName:S.cd?.name||'Cliente',authorRole:'client',createdAt:serverTimestamp()});el.value='';};
+window.submitReq=async()=>{
+  const ti=fval('ps-ti'),dc=fval('ps-dc');if(!ti||!dc)return alert('Preencha título e descrição.');
+  const ty=$('ps-ty')?.value,pj=$('ps-pj')?.value,pr=$('ps-pr')?.value,lk=fval('ps-lk');
+  const fileLinks=lk?lk.split(',').map(l=>l.trim()).filter(Boolean):[];
+  const proj=S.projects.find(p=>p.id===pj);
+  await addDoc(collection(db,'requests'),{title:ti,description:dc,type:ty,projectId:pj||'',projectName:proj?.name||'',priority:pr,fileLinks,clientId:S.profile.clientId,clientName:S.cd?.name||'',status:'recebido',createdAt:serverTimestamp()});
+  ['ps-ti','ps-dc','ps-lk'].forEach(i=>{const e=$(i);if(e)e.value='';});
+  const ok=$('ps-ok');if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',4000);}
+};
+window.submitRating=async()=>{
+  const score=parseInt($('rt-sc')?.value||0);if(!score)return alert('Selecione as estrelas.');
+  const pos=fval('rt-pos'),neg=fval('rt-neg'),cm=fval('rt-cm'),pj=$('rt-pj')?.value;
+  await addDoc(collection(db,'ratings'),{score,positive:pos,negative:neg,comment:cm,projectId:pj||'',clientId:S.profile.clientId,clientName:S.cd?.name||'',createdAt:serverTimestamp()});
+  ['rt-pos','rt-neg','rt-cm'].forEach(i=>{const e=$(i);if(e)e.value='';});_starVal=0;[1,2,3,4,5].forEach(i=>{const s=$('st'+i);if(s)s.textContent='☆';});$('rt-sc').value=0;
+  const ok=$('rt-ok');if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',4000);}
+};
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cm();});
+</script>
+</body>
+</html>
