@@ -206,7 +206,6 @@ button{cursor:pointer;font-family:inherit;}input,select,textarea{font-family:inh
       <div class="nav-it" id="nv-vendas" onclick="gv('vendas')"><span style="width:16px;text-align:center;">📈</span>Vendas / CRM</div>
       <div class="nav-it" id="nv-satisfacao" onclick="gv('satisfacao')"><span style="width:16px;text-align:center;">⭐</span>Satisfação</div>
       <div class="nav-it" id="nv-vendas" onclick="gv('vendas')"><span style="width:16px;text-align:center;">📈</span>Vendas / CRM</div>
-      <div class="nav-it" id="nv-satisfacao" onclick="gv('satisfacao')"><span style="width:16px;text-align:center;">⭐</span>Satisfação</div>
     </div>
     <div class="sb-sec">
       <div class="sb-lbl">Clientes <button onclick="om('client',{})">+</button></div>
@@ -377,8 +376,6 @@ function rv(){
   else if(S.view==='financeiro'){ti.innerHTML='💰 Painel Financeiro';ac.innerHTML=`<button class="bp" onclick="om('fin-lancamento',{})">+ Lançamento</button>`;renderFinanceiro();}
   else if(S.view==='vendas'){ti.innerHTML='📈 Vendas & CRM';ac.innerHTML=`<button class="bp" onclick="om('lead',{})">+ Lead</button>`;renderVendas();}
   else if(S.view==='satisfacao'){ti.innerHTML='⭐ Satisfação';ac.innerHTML=`<button class="bp" onclick="om('sat-manual',{})">+ Avaliar cliente</button>`;renderSatisfacao();}
-  else if(S.view==='vendas'){ti.innerHTML='📈 Vendas & CRM';ac.innerHTML=`<button class="bp" onclick="om('lead',{})">+ Lead / Prospecto</button>`;renderVendas();}
-  else if(S.view==='satisfacao'){ti.innerHTML='⭐ Satisfação dos Clientes';ac.innerHTML=`<button class="bp" onclick="om('sat-manual',{})">+ Avaliar cliente</button>`;renderSatisfacao();}
   else if(S.view==='client'){
     const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
     ti.innerHTML=`<span>Clientes / </span>${c.name}`;
@@ -825,74 +822,119 @@ window.marcarPago=async(id)=>{await updateDoc(doc(db,'financeiro',id),{status:'p
 window.delFin=async(id)=>{if(confirm('Excluir este lançamento?'))await deleteDoc(doc(db,'financeiro',id));};
 
 // ── VENDAS / CRM ──
+// CRM column config stored in localStorage
+function getCRMCols(){
+  try{return JSON.parse(localStorage.getItem('crmCols'))||['Prospecto','Contato feito','Reuniao agendada','Proposta enviada','Fechado'];}
+  catch{return['Prospecto','Contato feito','Reuniao agendada','Proposta enviada','Fechado'];}
+}
+function saveCRMCols(cols){localStorage.setItem('crmCols',JSON.stringify(cols));}
+
 function renderVendas(){
   const mc=$('mc');
   const leads=S.leads||[];
-  const etapas=['Prospecto','Contato feito','Reuniao agendada','Proposta enviada','Negociacao','Fechado','Perdido'];
-  const eCols={'Prospecto':['var(--bg4)','var(--t2)'],'Contato feito':['var(--bL)','var(--bD)'],'Reuniao agendada':['var(--aL)','var(--aD)'],'Proposta enviada':['var(--pL)','var(--p)'],'Negociacao':['var(--aL)','var(--aD)'],'Fechado':['var(--gL)','var(--gD)'],'Perdido':['var(--rL)','var(--rD)']};
-  const ativos=leads.filter(l=>l.etapa!=='Fechado'&&l.etapa!=='Perdido');
+  const cols=getCRMCols();
+  const ativos=leads.filter(l=>!l.arquivado);
   const fechados=leads.filter(l=>l.etapa==='Fechado');
   const ligFei=leads.reduce((a,l)=>a+(l.ligacoes||0),0);
-  const pipeline=leads.filter(l=>l.etapa!=='Perdido').reduce((a,l)=>a+(l.valorEstimado||0),0);
+  const pipeline=leads.filter(l=>l.etapa!=='Perdido'&&l.etapa!=='Fechado').reduce((a,l)=>a+(l.valorEstimado||0),0);
 
   mc.innerHTML=`
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
     <div class="met" style="background:var(--bL);"><div style="font-size:10px;color:var(--bD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Em prospecção</div><div style="font-size:26px;font-weight:700;color:var(--bD);">${ativos.length}</div></div>
     <div class="met" style="background:var(--gL);"><div style="font-size:10px;color:var(--gD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Fechados</div><div style="font-size:26px;font-weight:700;color:var(--gD);">${fechados.length}</div></div>
     <div class="met" style="background:var(--pL);"><div style="font-size:10px;color:var(--p);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Ligações feitas</div><div style="font-size:26px;font-weight:700;color:var(--p);">${ligFei}</div></div>
-    <div class="met" style="background:var(--aL);"><div style="font-size:10px;color:var(--aD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Pipeline total</div><div style="font-size:18px;font-weight:700;color:var(--aD);">R$ ${pipeline.toLocaleString('pt-BR')}</div></div>
+    <div class="met" style="background:var(--aL);"><div style="font-size:10px;color:var(--aD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Pipeline ativo</div><div style="font-size:18px;font-weight:700;color:var(--aD);">R$ ${pipeline.toLocaleString('pt-BR')}</div></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px;">
-    ${etapas.filter(e=>e!=='Fechado'&&e!=='Perdido').map(e=>{const cnt=leads.filter(l=>l.etapa===e).length;const c=eCols[e]||eCols['Prospecto'];return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:9px;font-weight:700;color:var(--t2);margin-bottom:5px;">${e.toUpperCase()}</div><div style="font-size:22px;font-weight:700;color:${c[1]};">${cnt}</div></div>`;}).join('')}
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
+    <span style="font-size:12px;font-weight:600;color:var(--t2);">Colunas do Kanban:</span>
+    <div id="colTags" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+    <button class="bsm" onclick="addCRMCol()">+ Coluna</button>
+    <button class="bo" style="font-size:11px;" onclick="om('lead',{})">+ Lead</button>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-    <div>
-      <div class="sec-t">Follow-ups agendados</div>
-      <div style="border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg2);">
-        ${leads.filter(l=>l.proxContato&&l.etapa!=='Fechado'&&l.etapa!=='Perdido').sort((a,b)=>(a.proxContato||'').localeCompare(b.proxContato||'')).slice(0,6).map(l=>{const c=eCols[l.etapa]||eCols['Prospecto'];return`<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:0.5px solid var(--bd);">
-          <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--t);">${l.nome}</div><div style="font-size:10px;color:var(--t3);">${l.empresa||''}</div></div>
-          <span class="bdg" style="background:${c[0]};color:${c[1]};">${l.etapa}</span>
-          <span style="font-size:11px;color:var(--aD);font-weight:600;">${l.proxContato}</span>
-        </div>`;}).join('')}
-        ${leads.filter(l=>l.proxContato&&l.etapa!=='Fechado'&&l.etapa!=='Perdido').length===0?'<div class="empty">Nenhum follow-up agendado</div>':''}
-      </div>
-    </div>
-    <div>
-      <div class="sec-t">Pipeline por etapa</div>
-      <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px;">
-        ${etapas.filter(e=>e!=='Perdido').map(e=>{const total=leads.filter(l=>l.etapa===e).reduce((a,l)=>a+(l.valorEstimado||0),0);const c=eCols[e]||eCols['Prospecto'];return total>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><span class="bdg" style="background:${c[0]};color:${c[1]};min-width:100px;text-align:center;font-size:9px;">${e.toUpperCase()}</span><div style="flex:1;height:5px;background:var(--bg3);border-radius:5px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pipeline?Math.round(total/pipeline*100):0)}%;background:${c[1]};border-radius:5px;"></div></div><span style="font-size:11px;font-weight:700;color:var(--t);min-width:80px;text-align:right;">R$ ${total.toLocaleString('pt-BR')}</span></div>`:''}).join('')}
-        <div style="border-top:0.5px solid var(--bd);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;"><span style="font-size:12px;font-weight:700;color:var(--t2);">Total</span><span style="font-size:14px;font-weight:700;color:var(--p);">R$ ${pipeline.toLocaleString('pt-BR')}</span></div>
-      </div>
-    </div>
-  </div>
+  <div id="crmKanban" style="display:flex;gap:9px;overflow-x:auto;padding-bottom:8px;"></div>`;
 
-  <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;">
-    <div style="padding:10px 14px;border-bottom:0.5px solid var(--bd);background:var(--bg4);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;">Todos os leads (${leads.length})</span>
-      <div style="display:flex;gap:7px;">
-        <select id="leadFiltro" onchange="renderVendas()" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd2);border-radius:7px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todas etapas</option>${etapas.map(e=>`<option value="${e}">${e}</option>`).join('')}</select>
-        <button class="bp" style="font-size:11px;padding:4px 11px;" onclick="om('lead',{})">+ Lead</button>
-      </div>
-    </div>
-    ${(()=>{const f=document.getElementById('leadFiltro')?.value||'';const lista=f?leads.filter(l=>l.etapa===f):leads;
-    if(!lista.length)return'<div class="empty">Nenhum lead. Clique em "+ Lead".</div>';
-    return`<table class="tbl" style="font-size:11px;"><thead><tr><th>Nome</th><th>Empresa</th><th>Etapa</th><th>Ligações</th><th>Próx. contato</th><th>Valor est.</th><th>Responsável</th><th></th></tr></thead><tbody>
-    ${lista.map(l=>{const c=eCols[l.etapa]||eCols['Prospecto'];return`<tr>
-      <td style="font-weight:600;">${l.nome}</td><td>${l.empresa||'—'}</td>
-      <td><span class="bdg" style="background:${c[0]};color:${c[1]};">${l.etapa}</span></td>
-      <td style="text-align:center;">${l.ligacoes||0}</td>
-      <td style="color:${l.proxContato?'var(--aD)':'var(--t3)'};">${l.proxContato||'—'}</td>
-      <td>${l.valorEstimado?'R$ '+l.valorEstimado.toLocaleString('pt-BR'):'—'}</td>
-      <td>${l.responsavel||'—'}</td>
-      <td style="display:flex;gap:4px;">
-        <button class="bsm" onclick='om("lead",${JSON.stringify(l).replace(/'/g,"&#39;")})' style="font-size:10px;padding:3px 7px;">Editar</button>
-        <button class="bsm" onclick="delLead('${l.id}')" style="font-size:10px;padding:3px 7px;background:var(--rL);color:var(--rD);border-color:var(--rD);">✕</button>
-      </td>
-    </tr>`;}).join('')}</tbody></table>`;})()}
-  </div>`;
+  renderCRMCols();
 }
+
+function renderCRMCols(){
+  const leads=S.leads||[];
+  const cols=getCRMCols();
+
+  // Render col tags
+  const tagsEl=$('colTags');
+  if(tagsEl)tagsEl.innerHTML=cols.map((col,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:6px;padding:3px 8px;font-size:11px;">
+    <span ondblclick="renameCRMCol(${i})" title="Duplo clique para renomear" style="cursor:pointer;">${col}</span>
+    <button onclick="removeCRMCol(${i})" style="background:none;border:none;font-size:12px;color:var(--t3);cursor:pointer;padding:0;line-height:1;">×</button>
+  </span>`).join('');
+
+  // Render kanban
+  const kb=$('crmKanban');
+  if(!kb)return;
+  kb.innerHTML=cols.map((col,ci)=>{
+    const colLeads=leads.filter(l=>l.etapa===col);
+    return`<div class="kc" style="min-width:200px;flex:1;" id="crm-col-${ci}" ondragover="event.preventDefault()" ondrop="dropLead(event,'${col}')">
+      <div class="kc-h" style="margin-bottom:9px;">
+        <span ondblclick="renameCRMCol(${ci})" title="Duplo clique para renomear" style="cursor:pointer;">${col.toUpperCase()}</span>
+        <span class="kc-n">${colLeads.length}</span>
+      </div>
+      ${colLeads.map(l=>`<div class="kcard" draggable="true" id="lead-${l.id}" ondragstart="dragLead(event,'${l.id}')" style="cursor:grab;">
+        <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:5px;">${l.nome}${l.empresa?`<div style="font-size:10px;color:var(--t3);font-weight:400;">${l.empresa}</div>`:''}</div>
+        ${l.valorEstimado?`<div style="font-size:11px;color:var(--gD);margin-bottom:4px;">R$ ${l.valorEstimado.toLocaleString('pt-BR')}</div>`:''}
+        ${l.proxContato?`<div style="font-size:10px;color:var(--aD);">📅 ${l.proxContato}</div>`:''}
+        ${l.telefone?`<div style="font-size:10px;color:var(--t3);">📞 ${l.telefone}</div>`:''}
+        <div style="display:flex;justify-content:flex-end;margin-top:7px;gap:4px;">
+          <button class="bsm" onclick='om("lead",${JSON.stringify(l).replace(/'/g,"&#39;")})' style="font-size:10px;padding:2px 7px;">Editar</button>
+          <button class="bsm" onclick="delLead('${l.id}')" style="font-size:10px;padding:2px 7px;background:var(--rL);color:var(--rD);border-color:var(--rD);">✕</button>
+        </div>
+      </div>`).join('')}
+      <div style="border:1.5px dashed var(--bd);border-radius:8px;padding:10px;text-align:center;font-size:11px;color:var(--t4);cursor:pointer;margin-top:4px;" onclick="om('lead',{etapa:'${col}'})">+ Adicionar</div>
+    </div>`;
+  }).join('');
+}
+
+window.dragLead=(e,id)=>{e.dataTransfer.setData('leadId',id);};
+window.dropLead=async(e,col)=>{
+  const id=e.dataTransfer.getData('leadId');
+  if(!id)return;
+  await updateDoc(doc(db,'leads',id),{etapa:col});
+};
+
+window.addCRMCol=()=>{
+  const nome=prompt('Nome da nova coluna:');
+  if(!nome||!nome.trim())return;
+  const cols=getCRMCols();
+  cols.push(nome.trim());
+  saveCRMCols(cols);
+  renderCRMCols();
+  const tagsEl=$('colTags');
+  if(tagsEl){const cols2=getCRMCols();tagsEl.innerHTML=cols2.map((col,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:6px;padding:3px 8px;font-size:11px;"><span ondblclick="renameCRMCol(${i})" style="cursor:pointer;">${col}</span><button onclick="removeCRMCol(${i})" style="background:none;border:none;font-size:12px;color:var(--t3);cursor:pointer;padding:0;line-height:1;">×</button></span>`).join('');}
+};
+
+window.renameCRMCol=(i)=>{
+  const cols=getCRMCols();
+  const novoNome=prompt('Renomear coluna para:',cols[i]);
+  if(!novoNome||!novoNome.trim())return;
+  const old=cols[i];
+  cols[i]=novoNome.trim();
+  saveCRMCols(cols);
+  // Update all leads in this column
+  (S.leads||[]).filter(l=>l.etapa===old).forEach(l=>updateDoc(doc(db,'leads',l.id),{etapa:novoNome.trim()}));
+  renderVendas();
+};
+
+window.removeCRMCol=(i)=>{
+  const cols=getCRMCols();
+  if(cols.length<=1){alert('Precisa ter pelo menos 1 coluna.');return;}
+  if(!confirm(`Remover coluna "${cols[i]}"? Os leads serão movidos para a primeira coluna.`))return;
+  const old=cols[i];
+  cols.splice(i,1);
+  saveCRMCols(cols);
+  (S.leads||[]).filter(l=>l.etapa===old).forEach(l=>updateDoc(doc(db,'leads',l.id),{etapa:cols[0]}));
+  renderVendas();
+};
+
 window.delLead=async(id)=>{if(confirm('Excluir este lead?'))await deleteDoc(doc(db,'leads',id));};
 
 // ── SATISFAÇÃO ──
@@ -911,20 +953,20 @@ function renderSatisfacao(){
       const k=cc(c.id);
       const col=c.score===null?'var(--t3)':c.score<70?'var(--rD)':c.score<85?'var(--aD)':'var(--gD)';
       const colBg=c.score===null?'var(--bg4)':c.score<70?'var(--rL)':c.score<85?'var(--aL)':'var(--gL)';
-      const lbl=c.score===null?'Sem avaliações':c.score<70?'Critico — atencao!':c.score<85?'Atencao':'Satisfatorio';
+      const lbl=c.score===null?'Sem avaliacoes':c.score<70?'Critico — atencao!':c.score<85?'Atencao':'Satisfatorio';
       return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:14px;padding:16px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div style="width:36px;height:36px;border-radius:9px;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">${c.initials||'?'}</div>
           <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--t);">${c.name}</div><div style="font-size:11px;color:var(--t3);">${c.total} avaliacao(oes)</div></div>
-          <div style="font-size:28px;font-weight:700;color:${col};">${c.score!==null?c.score+'%':'—'}</div>
+          <div style="font-size:26px;font-weight:700;color:${col};">${c.score!==null?c.score+'%':'—'}</div>
         </div>
         <div style="height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:${c.score||0}%;background:${col};border-radius:8px;"></div></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${c.rs.length?'10':'0'}px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <span style="font-size:11px;color:${col};font-weight:600;">${lbl}</span>
           <button class="bsm" onclick="om('sat-manual',{clientId:'${c.id}',clientName:'${c.name}'})">+ Avaliar</button>
         </div>
         ${c.rs.slice(0,2).map(r=>`<div style="padding:8px 10px;background:${colBg};border-radius:8px;margin-bottom:6px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;">${'⭐'.repeat(Math.round((r.score||0)/20))}</span><span style="font-size:10px;color:var(--t3);">${r.data||ft(r.createdAt)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:13px;">${'⭐'.repeat(Math.round((r.score||0)/20))}</span><span style="font-size:10px;color:var(--t3);">${r.data||ft(r.createdAt)}</span></div>
           ${r.positive?`<div style="font-size:11px;color:var(--gD);">+ ${r.positive}</div>`:''}
           ${r.negative?`<div style="font-size:11px;color:var(--aD);">- ${r.negative}</div>`:''}
           ${r.comment?`<div style="font-size:11px;color:var(--t2);">${r.comment}</div>`:''}
@@ -935,22 +977,22 @@ function renderSatisfacao(){
     ${S.clients.length===0?'<div class="empty" style="grid-column:1/-1;">Nenhum cliente cadastrado.</div>':''}
   </div>
 
-  <div class="sec-t">Historico completo</div>
+  <div class="sec-t">Historico completo de avaliacoes</div>
   <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;">
     ${allRatings.length===0?'<div class="empty">Nenhuma avaliacao ainda.</div>':
-    `<table class="tbl" style="font-size:11px;"><thead><tr><th>Cliente</th><th>Nota</th><th>Pontos positivos</th><th>Melhorias</th><th>Comentario</th><th>Data</th><th>Origem</th><th></th></tr></thead><tbody>
+    `<table class="tbl" style="font-size:11px;"><thead><tr><th>Cliente</th><th>Nota</th><th>Positivos</th><th>Melhorias</th><th>Comentario</th><th>Data</th><th>Origem</th><th></th></tr></thead><tbody>
     ${[...allRatings].sort((a,b)=>(b.data||'').localeCompare(a.data||'')).map(r=>{
       const cl=S.clients.find(c=>c.id===r.clientId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};
       const stars=Math.round((r.score||0)/20);
       return`<tr>
         <td><span style="font-size:11px;font-weight:600;background:${k.bg};color:${k.color};padding:2px 8px;border-radius:4px;">${cl?.name||'—'}</span></td>
         <td><span style="font-size:13px;">${'⭐'.repeat(stars)}</span> ${r.score}%</td>
-        <td style="color:var(--gD);">${r.positive||'—'}</td>
-        <td style="color:var(--aD);">${r.negative||'—'}</td>
-        <td style="color:var(--t2);">${r.comment||'—'}</td>
-        <td style="color:var(--t3);">${r.data||ft(r.createdAt)}</td>
+        <td style="color:var(--gD);font-size:11px;">${r.positive||'—'}</td>
+        <td style="color:var(--aD);font-size:11px;">${r.negative||'—'}</td>
+        <td style="color:var(--t2);font-size:11px;">${r.comment||'—'}</td>
+        <td style="color:var(--t3);font-size:11px;">${r.data||ft(r.createdAt)}</td>
         <td><span class="bdg" style="background:${r.isManual?'var(--pL)':'var(--bL)'};color:${r.isManual?'var(--p)':'var(--bD)'};">${r.isManual?'Manual':'Portal'}</span></td>
-        <td><button class="bsm" onclick="delSat('${r.id}','${r.isManual?'sat_manual':'ratings'}')" style="font-size:10px;padding:3px 7px;background:var(--rL);color:var(--rD);border-color:var(--rD);">X</button></td>
+        <td><button class="bsm" onclick="delSat('${r.id}','${r.isManual?'sat_manual':'ratings'}')" style="font-size:10px;padding:3px 7px;background:var(--rL);color:var(--rD);border-color:var(--rD);">✕</button></td>
       </tr>`;}).join('')}</tbody></table>`}
   </div>`;
 }
