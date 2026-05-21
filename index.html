@@ -202,6 +202,7 @@ button{cursor:pointer;font-family:inherit;}input,select,textarea{font-family:inh
       <div class="nav-it" id="nv-team" onclick="gv('team')"><span style="width:16px;text-align:center;">◎</span>Equipe</div>
       <div class="nav-it" id="nv-ai" onclick="gv('ai')"><span style="width:16px;text-align:center;">🤖</span>IA Assistente</div>
       <div class="nav-it" id="nv-usuarios" onclick="gv('usuarios')"><span style="width:16px;text-align:center;">🔑</span>Usuários & Acessos</div>
+      <div class="nav-it" id="nv-financeiro" onclick="gv('financeiro')"><span style="width:16px;text-align:center;">💰</span>Financeiro</div>
     </div>
     <div class="sb-sec">
       <div class="sb-lbl">Clientes <button onclick="om('client',{})">+</button></div>
@@ -330,6 +331,7 @@ function startAgency(){
     onSnapshot(query(collection(db,'deliveries'),orderBy('createdAt','desc')),s=>{S.deliveries=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
     onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),s=>{S.requests=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
     onSnapshot(query(collection(db,'ratings'),orderBy('createdAt','desc')),s=>{S.ratings=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
+    onSnapshot(query(collection(db,'financeiro'),orderBy('data','desc')),s=>{S.financeiro=s.docs.map(d=>({id:d.id,...d.data()}));rv();}),
     onSnapshot(query(collection(db,'users')),s=>{S.team=s.docs.map(d=>({id:d.id,...d.data()})).filter(u=>['team','agency'].includes(u.role));rv();}),
   ];
 }
@@ -364,6 +366,7 @@ function rv(){
   else if(S.view==='team'){ti.innerHTML='Equipe';ac.innerHTML=`<button class="bp" onclick="om('team-member',{})">+ Membro</button>`;renderTeam();}
   else if(S.view==='ai'){ti.innerHTML='🤖 IA Assistente';ac.innerHTML='';renderAI();}
   else if(S.view==='usuarios'){ti.innerHTML='🔑 Usuários & Acessos';ac.innerHTML=`<button class="bp" onclick="om('team-member',{})">+ Membro da equipe</button>`;renderUsuarios();}
+  else if(S.view==='financeiro'){ti.innerHTML='💰 Painel Financeiro';ac.innerHTML=`<button class="bp" onclick="om('fin-lancamento',{})">+ Lançamento</button>`;renderFinanceiro();}
   else if(S.view==='client'){
     const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
     ti.innerHTML=`<span>Clientes / </span>${c.name}`;
@@ -684,6 +687,120 @@ window.addClientUser=async(clientId)=>{
   }catch(e){err.textContent='Erro: '+e.message;err.classList.remove('hidden');}
 };
 
+// ── FINANCEIRO ──
+function renderFinanceiro(){
+  const mc=$('mc');
+  const fins=S.financeiro||[];
+  const receitas=fins.filter(f=>f.tipo==='receita'&&f.status==='pago');
+  const despesas=fins.filter(f=>f.tipo==='despesa'&&f.status==='pago');
+  const emAberto=fins.filter(f=>f.status==='aberto');
+  const aVencer=fins.filter(f=>f.status==='aberto'&&f.vencimento);
+  const totalReceitas=receitas.reduce((a,f)=>a+(f.valor||0),0);
+  const totalDespesas=despesas.reduce((a,f)=>a+(f.valor||0),0);
+  const totalAberto=emAberto.filter(f=>f.tipo==='receita').reduce((a,f)=>a+(f.valor||0),0);
+  const totalDividas=fins.filter(f=>f.tipo==='despesa'&&f.status!=='pago').reduce((a,f)=>a+(f.valor||0),0);
+  const saldo=totalReceitas-totalDespesas;
+  const fmt=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Group by month for cashflow
+  const meses={};
+  fins.forEach(f=>{
+    if(!f.data)return;
+    const m=f.data.slice(0,7);
+    if(!meses[m])meses[m]={rec:0,desp:0};
+    if(f.tipo==='receita'&&f.status==='pago')meses[m].rec+=(f.valor||0);
+    if(f.tipo==='despesa'&&f.status==='pago')meses[m].desp+=(f.valor||0);
+  });
+  const mesesOrdenados=Object.keys(meses).sort().slice(-6);
+
+  mc.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+    <div class="met" style="background:var(--gL);"><div style="font-size:10px;color:var(--gD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Faturamento recebido</div><div style="font-size:22px;font-weight:700;color:var(--gD);">${fmt(totalReceitas)}</div></div>
+    <div class="met" style="background:var(--rL);"><div style="font-size:10px;color:var(--rD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Total de despesas</div><div style="font-size:22px;font-weight:700;color:var(--rD);">${fmt(totalDespesas)}</div></div>
+    <div class="met" style="background:${saldo>=0?'var(--bL)':'var(--rL)'};"><div style="font-size:10px;color:${saldo>=0?'var(--bD)':'var(--rD)'};font-weight:700;margin-bottom:3px;text-transform:uppercase;">Saldo</div><div style="font-size:22px;font-weight:700;color:${saldo>=0?'var(--bD)':'var(--rD)'};">${fmt(saldo)}</div></div>
+    <div class="met" style="background:var(--aL);"><div style="font-size:10px;color:var(--aD);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Contas em aberto</div><div style="font-size:22px;font-weight:700;color:var(--aD);">${fmt(totalAberto)}</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+    <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Dívidas / contas a pagar</div>
+      <div style="font-size:28px;font-weight:700;color:var(--rD);margin-bottom:4px;">${fmt(totalDividas)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:12px;">${fins.filter(f=>f.tipo==='despesa'&&f.status!=='pago').length} lançamento(s) em aberto</div>
+      ${fins.filter(f=>f.tipo==='despesa'&&f.status!=='pago').slice(0,5).map(f=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);">
+        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--t);">${f.descricao}</div><div style="font-size:10px;color:var(--t3);">${f.categoria||'Sem categoria'}${f.vencimento?' · Vence: '+f.vencimento:''}</div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--rD);">${fmt(f.valor||0)}</div>
+        <button class="bsm" onclick="marcarPago('${f.id}')">Pagar</button>
+      </div>`).join('')}
+      ${fins.filter(f=>f.tipo==='despesa'&&f.status!=='pago').length===0?'<div class="empty" style="padding:16px 0;">Nenhuma dívida cadastrada</div>':''}
+    </div>
+
+    <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Contas a receber (em aberto)</div>
+      <div style="font-size:28px;font-weight:700;color:var(--aD);margin-bottom:4px;">${fmt(totalAberto)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:12px;">${emAberto.filter(f=>f.tipo==='receita').length} fatura(s) pendente(s)</div>
+      ${emAberto.filter(f=>f.tipo==='receita').slice(0,5).map(f=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);">
+        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--t);">${f.descricao}</div><div style="font-size:10px;color:var(--t3);">${f.cliente||''}${f.vencimento?' · Vence: '+f.vencimento:''}</div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--aD);">${fmt(f.valor||0)}</div>
+        <button class="bsm" onclick="marcarPago('${f.id}')">Recebido</button>
+      </div>`).join('')}
+      ${emAberto.filter(f=>f.tipo==='receita').length===0?'<div class="empty" style="padding:16px 0;">Nenhuma conta em aberto</div>':''}
+    </div>
+  </div>
+
+  <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:18px;">
+    <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Fluxo de caixa — últimos 6 meses</div>
+    <div style="position:relative;height:180px;"><canvas id="chFluxo" role="img" aria-label="Fluxo de caixa">Fluxo de caixa mensal.</canvas></div>
+  </div>
+
+  <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;">
+    <div style="padding:10px 14px;border-bottom:0.5px solid var(--bd);background:var(--bg4);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;">Todos os lançamentos</span>
+      <div style="display:flex;gap:7px;">
+        <select id="finFiltro" onchange="renderFinanceiro()" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd2);border-radius:7px;background:var(--bg2);color:var(--t);outline:none;">
+          <option value="">Todos</option><option value="receita">Receitas</option><option value="despesa">Despesas</option>
+        </select>
+        <button class="bp" style="font-size:11px;padding:4px 11px;" onclick="om('fin-lancamento',{})">+ Lançamento</button>
+      </div>
+    </div>
+    ${(()=>{
+      const filtro=document.getElementById('finFiltro')?.value||'';
+      const lista=fins.filter(f=>!filtro||f.tipo===filtro).sort((a,b)=>b.data?.localeCompare(a.data||'')||0);
+      if(!lista.length)return'<div class="empty">Nenhum lançamento. Clique em "+ Lançamento" para começar.</div>';
+      return`<table class="tbl"><thead><tr><th>Descrição</th><th>Tipo</th><th>Categoria</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody>
+      ${lista.map(f=>`<tr>
+        <td style="font-weight:600;">${f.descricao}</td>
+        <td><span class="bdg" style="background:${f.tipo==='receita'?'var(--gL)':'var(--rL)'};color:${f.tipo==='receita'?'var(--gD)':'var(--rD)'};">${f.tipo}</span></td>
+        <td style="color:var(--t2);">${f.categoria||'—'}</td>
+        <td style="color:var(--t2);">${f.cliente||'—'}</td>
+        <td style="font-weight:700;color:${f.tipo==='receita'?'var(--gD)':'var(--rD)'};">${fmt(f.valor||0)}</td>
+        <td style="color:var(--t3);">${f.data||'—'}</td>
+        <td style="color:${f.vencimento&&f.status==='aberto'?'var(--aD)':'var(--t3)'};">${f.vencimento||'—'}</td>
+        <td><span class="bdg" style="background:${f.status==='pago'?'var(--gL)':f.status==='aberto'?'var(--aL)':'var(--rL)'};color:${f.status==='pago'?'var(--gD)':f.status==='aberto'?'var(--aD)':'var(--rD)'};">${f.status}</span></td>
+        <td style="display:flex;gap:4px;">
+          ${f.status!=='pago'?`<button class="bsm" onclick="marcarPago('${f.id}')" style="font-size:10px;padding:3px 7px;">✓</button>`:''}
+          <button class="bsm" onclick="delFin('${f.id}')" style="font-size:10px;padding:3px 7px;background:var(--rL);color:var(--rD);border-color:var(--rD);">✕</button>
+        </td>
+      </tr>`).join('')}
+      </tbody></table>`;
+    })()}
+  </div>`;
+
+  setTimeout(()=>{
+    dc('chFluxo');
+    if(!mesesOrdenados.length)return;
+    const labels=mesesOrdenados.map(m=>{const[y,mo]=m.split('-');return['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(mo)-1]+'/'+y.slice(2);});
+    const isDk=document.documentElement.getAttribute('data-theme')==='dark';
+    const gc=isDk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+    const tc=isDk?'#888':'#666';
+    S.charts['chFluxo']=new Chart($('chFluxo'),{type:'bar',data:{labels,datasets:[{label:'Receitas',data:mesesOrdenados.map(m=>meses[m].rec),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false},{label:'Despesas',data:mesesOrdenados.map(m=>meses[m].desp),backgroundColor:'#E24B4A',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11},color:tc}}},scales:{y:{ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'),font:{size:10},color:tc},grid:{color:gc}},x:{ticks:{font:{size:11},color:tc},grid:{display:false}}}}});
+  },80);
+}
+
+window.marcarPago=async(id)=>{await updateDoc(doc(db,'financeiro',id),{status:'pago'});};
+window.delFin=async(id)=>{if(confirm('Excluir este lançamento?'))await deleteDoc(doc(db,'financeiro',id));};
+
 // ── AI ASSISTANT ──
 let mediaRecorder=null,audioChunks=[],isRecording=false;
 function renderAI(){
@@ -988,6 +1105,22 @@ window.om=(type,data)=>{
     <div class="fg"><label>Descrição</label><input id="f-lb" placeholder="Ex: Briefing aprovado"></div>
     <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="saveCK()">Salvar</button></div>`;}
 
+  else if(type==='fin-lancamento'){
+    const clientes=S.clients.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+    mb.innerHTML=`<div class="mh"><div class="mt">Novo lançamento financeiro</div><button class="mx" onclick="cm()">×</button></div>
+    <div class="fg"><label>Tipo</label><select id="fl-tp" onchange="this.closest('.mbox').querySelector('#fl-cl-row').style.display=this.value==='receita'?'block':'none'"><option value="receita">Receita (entrada)</option><option value="despesa">Despesa (saída)</option></select></div>
+    <div class="fg"><label>Descrição</label><input id="fl-desc" placeholder="Ex: Mensalidade TechVision, Aluguel, Fornecedor..."></div>
+    <div class="fg"><label>Categoria</label><select id="fl-cat">
+      <option>Mensalidade de cliente</option><option>Projeto pontual</option><option>Aluguel</option><option>Salário / Pro-labore</option><option>Fornecedor</option><option>Software / Assinatura</option><option>Marketing</option><option>Imposto</option><option>Equipamento</option><option>Outro</option>
+    </select></div>
+    <div class="fg" id="fl-cl-row"><label>Cliente (se for receita)</label><select id="fl-cl"><option value="">Nenhum</option>${clientes}</select></div>
+    <div class="fg"><label>Valor (R$)</label><input id="fl-val" type="number" step="0.01" placeholder="0,00"></div>
+    <div class="fg"><label>Data</label><input id="fl-dt" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div class="fg"><label>Vencimento (opcional)</label><input id="fl-vc" type="date"></div>
+    <div class="fg"><label>Status</label><select id="fl-st"><option value="aberto">Em aberto</option><option value="pago">Pago / Recebido</option></select></div>
+    <div class="fg"><label>Observação</label><input id="fl-obs" placeholder="Opcional..."></div>
+    <div class="mft"><button class="bo" onclick="cm()">Cancelar</button><button class="bp" onclick="salvarLancamento()">Salvar</button></div>`;
+  }
   else if(type==='del'){mb.innerHTML=`<div class="mh"><div class="mt">Nova entrega</div><button class="mx" onclick="cm()">×</button></div>
     <div class="fg"><label>Título</label><input id="f-ti" placeholder="Ex: Moodboard v1"></div>
     <div class="fg"><label>Projeto</label><select id="f-pi"><option value="">Sem projeto</option>${S.projects.filter(p=>p.clientId===(data.clientId||S.acl)).map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
@@ -1012,6 +1145,13 @@ window.saveFr=async cid=>{const nm=fval('f-nm'),tp=$('f-tp')?.value,pi=$('f-pi')
 window.saveTk=async id=>{const d={title:fval('f-ti'),clientId:$('f-ci')?.value||'',projectId:$('f-pi')?.value||'',frenteId:$('f-fr')?.value||null,assignee:$('f-as')?.value||'',deadline:$('f-dl')?.value||'',status:$('f-st')?.value||'todo',urgent:$('f-ur')?.checked||false};if(!d.title)return alert('Digite o título da tarefa.');if(id)await updateDoc(doc(db,'tasks',id),d);else await addDoc(collection(db,'tasks'),{...d,createdAt:serverTimestamp()});cm();};
 window.saveCK=async()=>{const l=fval('f-lb'),pi=$('f-pi')?.value;if(!l||!pi)return;await addDoc(collection(db,'checklist'),{label:l,projectId:pi,done:false,order:Date.now(),createdAt:serverTimestamp()});cm();};
 window.saveDel=async cid=>{const ti=fval('f-ti'),pi=$('f-pi')?.value,lk=fval('f-lk'),dc=fval('f-dc');if(!ti)return;await addDoc(collection(db,'deliveries'),{title:ti,projectId:pi||'',clientId:cid,link:lk||'',description:dc||'',status:'aguardando aprovação',createdAt:serverTimestamp()});cm();};
+
+window.salvarLancamento=async()=>{
+  const tipo=$('fl-tp')?.value,desc=fval('fl-desc'),cat=$('fl-cat')?.value,cliente=$('fl-cl')?.value,val=parseFloat($('fl-val')?.value||0),dt=$('fl-dt')?.value,vc=$('fl-vc')?.value,st=$('fl-st')?.value,obs=fval('fl-obs');
+  if(!desc||!val||!dt)return alert('Preencha descrição, valor e data.');
+  await addDoc(collection(db,'financeiro'),{tipo,descricao:desc,categoria:cat,cliente:cliente||'',valor:val,data:dt,vencimento:vc||'',status:st,observacao:obs,createdAt:serverTimestamp()});
+  cm();
+};
 
 // ──────────────────────────────────────────
 // CLIENT PORTAL
