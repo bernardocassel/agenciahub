@@ -201,6 +201,7 @@ button{cursor:pointer;font-family:inherit;}input,select,textarea{font-family:inh
       <div class="nav-it" id="nv-all-tasks" onclick="gv('all-tasks')"><span style="width:16px;text-align:center;">✓</span>Todas as tarefas</div>
       <div class="nav-it" id="nv-team" onclick="gv('team')"><span style="width:16px;text-align:center;">◎</span>Equipe</div>
       <div class="nav-it" id="nv-ai" onclick="gv('ai')"><span style="width:16px;text-align:center;">🤖</span>IA Assistente</div>
+      <div class="nav-it" id="nv-usuarios" onclick="gv('usuarios')"><span style="width:16px;text-align:center;">🔑</span>Usuários & Acessos</div>
     </div>
     <div class="sb-sec">
       <div class="sb-lbl">Clientes <button onclick="om('client',{})">+</button></div>
@@ -362,6 +363,7 @@ function rv(){
   else if(S.view==='all-tasks'){ti.innerHTML='Todas as tarefas';ac.innerHTML=`<button class="bp" onclick="om('task',{})">+ Nova tarefa</button>`;renderAllTasks();}
   else if(S.view==='team'){ti.innerHTML='Equipe';ac.innerHTML=`<button class="bp" onclick="om('team-member',{})">+ Membro</button>`;renderTeam();}
   else if(S.view==='ai'){ti.innerHTML='🤖 IA Assistente';ac.innerHTML='';renderAI();}
+  else if(S.view==='usuarios'){ti.innerHTML='🔑 Usuários & Acessos';ac.innerHTML=`<button class="bp" onclick="om('team-member',{})">+ Membro da equipe</button>`;renderUsuarios();}
   else if(S.view==='client'){
     const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
     ti.innerHTML=`<span>Clientes / </span>${c.name}`;
@@ -483,6 +485,110 @@ function renderTeam(){
     </div>`;}).join('')}
   </div>`;
 }
+
+// ── USUARIOS & ACESSOS ──
+function renderUsuarios(){
+  const mc=$('mc');
+  const allUsers=S.team;
+  const clientUsers=S.clients.map(c=>({...c,isClient:true}));
+
+  mc.innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:flex-start;">
+
+    <div>
+      <div class="sec-t">Equipe interna</div>
+      <div style="border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg2);margin-bottom:18px;">
+        <div style="padding:10px 14px;border-bottom:0.5px solid var(--bd);background:var(--bg4);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;">Membros com acesso</span>
+          <button class="bp" style="font-size:11px;padding:4px 11px;" onclick="om('team-member',{})">+ Adicionar</button>
+        </div>
+        ${allUsers.map((u,i)=>{const k={color:CC[i%CC.length],bg:CB[i%CB.length]};return`<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:0.5px solid var(--bd);">
+          ${av(u.name||u.email,k.color,k.bg,32)}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:var(--t);">${u.name||'Sem nome'}</div>
+            <div style="font-size:11px;color:var(--t3);">${u.email}</div>
+          </div>
+          <span class="bdg" style="background:${u.role==='agency'?'var(--pL)':'var(--bL)'};color:${u.role==='agency'?'var(--p)':'var(--bD)'};">${u.role==='agency'?'Admin':'Equipe'}</span>
+          <button class="bsm" style="margin-left:6px;" onclick="resetPassword('${u.email}')">Redefinir senha</button>
+        </div>`;}).join('')}
+        ${allUsers.length===0?'<div class="empty">Nenhum membro cadastrado.</div>':''}
+      </div>
+
+      <div class="sec-t">Acessos de clientes</div>
+      <div style="border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg2);">
+        <div style="padding:10px 14px;border-bottom:0.5px solid var(--bd);background:var(--bg4);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;">Portais ativos</span>
+          <button class="bp" style="font-size:11px;padding:4px 11px;" onclick="om('client',{})">+ Novo cliente</button>
+        </div>
+        ${S.clients.map(c=>{const k=cc(c.id);return`<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:0.5px solid var(--bd);">
+          <div class="cl-av" style="width:32px;height:32px;border-radius:8px;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">${c.initials||'?'}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:var(--t);">${c.name}</div>
+            <div style="font-size:11px;color:var(--t3);">${c.email||'E-mail não cadastrado'}</div>
+          </div>
+          <span class="bdg" style="background:var(--gL);color:var(--gD);">Portal ativo</span>
+          <button class="bsm" style="margin-left:6px;" onclick="resetPassword('${c.email||''}')">Redefinir senha</button>
+          <button class="bsm" style="margin-left:4px;background:var(--rL);color:var(--rD);border-color:var(--rD);" onclick="delClient('${c.id}','${c.name}')">Excluir</button>
+        </div>`;}).join('')}
+        ${S.clients.length===0?'<div class="empty">Nenhum cliente cadastrado.</div>':''}
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-t">Criar novo acesso de cliente</div>
+      <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:13px;padding:20px;">
+        <p style="font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6;">Preencha abaixo para criar o cliente e o login de acesso ao portal em uma única etapa.</p>
+        <div class="fg"><label>Nome da empresa</label><input id="nc-nm" placeholder="Ex: Empresa XYZ"></div>
+        <div class="fg"><label>Sigla (2-3 letras)</label><input id="nc-in" maxlength="3" placeholder="EX"></div>
+        <div class="fg"><label>E-mail de acesso do cliente</label><input id="nc-em" type="email" placeholder="cliente@empresa.com"></div>
+        <div class="fg"><label>Senha inicial</label><input id="nc-pw" type="password" placeholder="Mín. 6 caracteres"></div>
+        <div id="nc-ok" class="hidden" style="background:var(--gL);color:var(--gD);border-radius:9px;padding:10px;font-size:12px;margin-bottom:12px;text-align:center;font-weight:700;">✅ Cliente e acesso criados!</div>
+        <div id="nc-err" class="hidden" style="background:var(--rL);color:var(--rD);border-radius:9px;padding:10px;font-size:12px;margin-bottom:12px;"></div>
+        <button class="bp" style="width:100%;padding:11px;font-size:13px;" onclick="criarClienteAcesso()">Criar cliente + login</button>
+      </div>
+
+      <div class="sec-t" style="margin-top:18px;">Como funciona o acesso</div>
+      <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:16px;">
+        ${[['🔑','Admin (você)','Acessa o painel interno com todas as funcionalidades'],['👥','Equipe','Acessa o painel interno, vê tarefas atribuídas'],['🏢','Cliente','Acessa apenas o portal do cliente com seus projetos e entregas']].map(([ic,tp,desc])=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+          <span style="font-size:20px;flex-shrink:0;">${ic}</span>
+          <div><div style="font-size:12px;font-weight:700;color:var(--t);">${tp}</div><div style="font-size:11px;color:var(--t2);margin-top:2px;">${desc}</div></div>
+        </div>`).join('')}
+        <div style="background:var(--aL);border-radius:8px;padding:10px 13px;margin-top:4px;">
+          <div style="font-size:11px;color:var(--aD);font-weight:600;">💡 Link do portal do cliente</div>
+          <div style="font-size:11px;color:var(--aD);margin-top:4px;">Envie este link para seus clientes: <span style="font-weight:700;">bernardocassel.github.io/agenciahub</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.resetPassword=async(email)=>{
+  if(!email){alert('Este usuário não tem e-mail cadastrado.');return;}
+  if(!confirm(`Enviar e-mail de redefinição de senha para ${email}?`))return;
+  try{
+    const {sendPasswordResetEmail}=await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+    await sendPasswordResetEmail(auth,email);
+    alert(`E-mail de redefinição enviado para ${email}!`);
+  }catch(e){alert('Erro: '+e.message);}
+};
+
+window.criarClienteAcesso=async()=>{
+  const nm=fval('nc-nm'),ini=(fval('nc-in')||nm.slice(0,2)||'??').toUpperCase(),em=fval('nc-em'),pw=$('nc-pw')?.value;
+  const ok=$('nc-ok'),err=$('nc-err');
+  ok.classList.add('hidden');err.classList.add('hidden');
+  if(!nm||!em||!pw){err.textContent='Preencha todos os campos.';err.classList.remove('hidden');return;}
+  if(pw.length<6){err.textContent='A senha deve ter pelo menos 6 caracteres.';err.classList.remove('hidden');return;}
+  try{
+    const ref=await addDoc(collection(db,'clients'),{name:nm,email:em,initials:ini,createdAt:serverTimestamp()});
+    const r=await createUserWithEmailAndPassword(auth,em,pw);
+    await setDoc(doc(db,'users',r.user.uid),{role:'client',clientId:ref.id,name:nm,email:em});
+    ['nc-nm','nc-in','nc-em'].forEach(i=>{const e=$(i);if(e)e.value='';});
+    $('nc-pw').value='';
+    ok.classList.remove('hidden');
+    setTimeout(()=>ok.classList.add('hidden'),4000);
+  }catch(e){err.textContent='Erro: '+e.message;err.classList.remove('hidden');}
+};
 
 // ── AI ASSISTANT ──
 let mediaRecorder=null,audioChunks=[],isRecording=false;
