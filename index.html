@@ -222,6 +222,7 @@ button{cursor:pointer;font-family:inherit;}input,select,textarea{font-family:inh
     </div>
     <div class="tabs hidden" id="clTabs">
       <div class="tab on" data-t="projetos" onclick="st(this)">Projetos</div>
+      <div class="tab" data-t="tarefas" onclick="st(this)">Tarefas</div>
       <div class="tab" data-t="kanban" onclick="st(this)">Kanban</div>
       <div class="tab" data-t="checklist" onclick="st(this)">Checklist</div>
       <div class="tab" data-t="entregas" onclick="st(this)">Entregas</div>
@@ -412,7 +413,7 @@ function renderDash(){
   <div class="therm-grid" id="thermGrid"></div>
   <div class="chart-row">
     <div class="chart-box"><div class="chart-box-t">Status das tarefas</div><div style="position:relative;height:180px;"><canvas id="chStatus" role="img" aria-label="Status">Status.</canvas></div></div>
-    <div class="chart-box"><div class="chart-box-t">Progresso por projeto</div><div style="position:relative;height:${Math.max(180,fprojs.length*38+40)}px;"><canvas id="chProj" role="img" aria-label="Progresso">Progresso.</canvas></div></div>
+    <div class="chart-box"><div class="chart-box-t">Progresso por projeto (top 8)</div><div style="position:relative;height:220px;"><canvas id="chProj" role="img" aria-label="Progresso">Progresso.</canvas></div></div>
   </div>
   <div class="chart-box" style="margin-bottom:16px;"><div class="chart-box-t">Tarefas por responsável</div><div style="position:relative;height:150px;"><canvas id="chTeam" role="img" aria-label="Equipe">Equipe.</canvas></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
@@ -438,7 +439,7 @@ function renderDash(){
     const gc=isDk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';const tc=isDk?'#888':'#666';
     const stC={todo:0,doing:0,review:0,done:0};ftasks.forEach(t=>stC[t.status]=(stC[t.status]||0)+1);
     S.charts['chStatus']=new Chart($('chStatus'),{type:'doughnut',data:{labels:['A fazer','Em andamento','Revisão','Concluído'],datasets:[{data:[stC.todo,stC.doing,stC.review,stC.done],backgroundColor:['#888780','#378ADD','#EF9F27','#1D9E75'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
-    if(fprojs.length){S.charts['chProj']=new Chart($('chProj'),{type:'bar',data:{labels:fprojs.map(p=>p.name.length>15?p.name.slice(0,15)+'…':p.name),datasets:[{data:fprojs.map(p=>p.progress||0),backgroundColor:fprojs.map((_,i)=>CC[i%CC.length]),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{callback:v=>v+'%',font:{size:10},color:tc},grid:{color:gc}},y:{ticks:{font:{size:10},color:tc},grid:{display:false}}}}});}
+    if(fprojs.length){const maxProj=Math.min(fprojs.length,8);const topProjs=fprojs.slice(0,maxProj);S.charts['chProj']=new Chart($('chProj'),{type:'bar',data:{labels:topProjs.map(p=>p.name.length>14?p.name.slice(0,14)+'…':p.name),datasets:[{data:topProjs.map(p=>p.progress||0),backgroundColor:topProjs.map((_,i)=>CC[i%CC.length]),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{callback:v=>v+'%',font:{size:10},color:tc},grid:{color:gc}},y:{ticks:{font:{size:10},color:tc},grid:{display:false}}}}});}
     const assignees=[...new Set(ftasks.map(t=>t.assignee).filter(Boolean))];
     if(assignees.length){const cnts=assignees.map(a=>ftasks.filter(t=>t.assignee===a).length);S.charts['chTeam']=new Chart($('chTeam'),{type:'bar',data:{labels:assignees,datasets:[{data:cnts,backgroundColor:CC.slice(0,assignees.length),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1,font:{size:10},color:tc},grid:{color:gc}},x:{ticks:{font:{size:11},color:tc},grid:{display:false}}}}});}
   },80);
@@ -446,31 +447,60 @@ function renderDash(){
 
 // ── ALL TASKS ──
 function renderAllTasks(){
-  $('mc').innerHTML=`<div class="fbar">
+  const vw=S.atView||'list';
+  $('mc').innerHTML=`<div class="fbar" style="margin-bottom:12px;">
     <select id="ftC" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos clientes</option>${S.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
+    <select id="ftP" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos projetos</option>${S.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select>
     <select id="ftS" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos status</option>${Object.entries(SL).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
     <select id="ftA" onchange="ftT()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos responsáveis</option>${teamNames().map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+    <div style="margin-left:auto;display:flex;gap:6px;">
+      <button onclick="S.atView='list';renderAllTasks()" class="${vw==='list'?'bp':'bo'}" style="font-size:11px;padding:5px 11px;">☰ Lista</button>
+      <button onclick="S.atView='kanban';renderAllTasks()" class="${vw==='kanban'?'bp':'bo'}" style="font-size:11px;padding:5px 11px;">⊞ Kanban</button>
+      <button onclick="om('task',{})" class="bp" style="font-size:11px;padding:5px 11px;">+ Tarefa</button>
+    </div>
   </div><div id="ttbl"></div>`;
-  // Filter by team member if role is team
-  if(S.profile.role==='team'){const el=$('ftA');if(el){const myName=S.profile.name||S.profile.email;const opt=[...el.options].find(o=>o.value===myName);if(opt)opt.selected=true;}}
+  if(S.profile.role==='team'){const el=$('ftA');if(el){const mn=S.profile.name||S.profile.email;const opt=[...el.options].find(o=>o.value===mn);if(opt)opt.selected=true;}}
   ftT();
 }
 window.ftT=()=>{
-  const fc=$('ftC')?.value,fs=$('ftS')?.value,fa=$('ftA')?.value;
+  const fc=$('ftC')?.value,fp=$('ftP')?.value,fs=$('ftS')?.value,fa=$('ftA')?.value;
   let t=S.tasks;
   if(S.profile.role==='team'&&!fa){const mn=S.profile.name||S.profile.email;t=t.filter(x=>x.assignee===mn);}
-  if(fc)t=t.filter(x=>x.clientId===fc);if(fs)t=t.filter(x=>x.status===fs);if(fa)t=t.filter(x=>x.assignee===fa);
+  if(fc)t=t.filter(x=>x.clientId===fc);
+  if(fp)t=t.filter(x=>x.projectId===fp);
+  if(fs)t=t.filter(x=>x.status===fs);
+  if(fa)t=t.filter(x=>x.assignee===fa);
   const el=$('ttbl');if(!el)return;
   if(!t.length){el.innerHTML='<div class="empty">Nenhuma tarefa.</div>';return;}
-  el.innerHTML=`<table class="tbl"><thead><tr>${['Tarefa','Cliente','Projeto','Frente','Responsável','Status','Prazo',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
-  ${t.map(x=>{const cl=S.clients.find(c=>c.id===x.clientId);const pr=S.projects.find(p=>p.id===x.projectId);const fr=S.frentes.find(f=>f.id===x.frenteId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};return`<tr>
-    <td style="font-weight:600;">${x.urgent?'<span class="udot"></span>':''}${x.title}</td>
-    <td>${cl?`<span style="background:${k.bg};color:${k.color};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;">${cl.name}</span>`:''}</td>
-    <td style="color:var(--t2);">${pr?.name||''}</td>
-    <td style="color:var(--t2);">${fr?`${FICONS[fr.type]||'📁'} ${fr.name}`:'—'}</td>
-    <td>${x.assignee||'—'}</td><td>${sb(x.status)}</td><td style="color:var(--t3);">${x.deadline||''}</td>
-    <td><button class="bsm" onclick='om("task",${JSON.stringify(x).replace(/'/g,"&#39;")})'>Editar</button></td>
-  </tr>`;}).join('')}</tbody></table>`;
+  const vw=S.atView||'list';
+  if(vw==='kanban'){
+    el.innerHTML=`<div class="kanban">${['todo','doing','review','done'].map(st=>{
+      const ft=t.filter(x=>x.status===st);
+      return`<div class="kc" ondragover="event.preventDefault()" ondrop="dropTask(event,'${st}')"><div class="kc-h">${SL[st]}<span class="kc-n">${ft.length}</span></div>
+      ${ft.map(x=>{const cl=S.clients.find(c=>c.id===x.clientId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};return`<div class="kcard" draggable="true" ondragstart="dragTask(event,'${x.id}')" style="cursor:grab;">
+        <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:5px;">${x.urgent?'<span class="udot"></span>':''}${x.title}</div>
+        ${cl?`<div style="font-size:10px;background:${k.bg};color:${k.color};padding:1px 6px;border-radius:4px;display:inline-block;margin-bottom:5px;">${cl.name}</div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:5px;">${x.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${x.assignee[0]}</div>${x.assignee}</span>`:'—'}<span>${x.deadline||''}</span></div>
+        <button class="bsm" style="font-size:10px;width:100%;margin-top:3px;" onclick='om("task",${JSON.stringify(x).replace(/'/g,"&#39;")})'>Editar</button>
+      </div>`;}).join('')}</div>`;
+    }).join('')}</div>`;
+  } else {
+    el.innerHTML=`<table class="tbl"><thead><tr>${['Tarefa','Cliente','Projeto','Frente','Responsável','Status','Prazo',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+    ${t.map(x=>{const cl=S.clients.find(c=>c.id===x.clientId);const pr=S.projects.find(p=>p.id===x.projectId);const fr=S.frentes.find(f=>f.id===x.frenteId);const k=cl?cc(cl.id):{color:'#666',bg:'#eee'};return`<tr>
+      <td style="font-weight:600;">${x.urgent?'<span class="udot"></span>':''}${x.title}</td>
+      <td>${cl?`<span style="background:${k.bg};color:${k.color};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;">${cl.name}</span>`:''}</td>
+      <td style="color:var(--t2);">${pr?.name||''}</td>
+      <td style="color:var(--t2);">${fr?`${FICONS[fr.type]||'📁'} ${fr.name}`:'—'}</td>
+      <td>${x.assignee||'—'}</td><td>${sb(x.status)}</td><td style="color:var(--t3);">${x.deadline||''}</td>
+      <td><button class="bsm" onclick='om("task",${JSON.stringify(x).replace(/'/g,"&#39;")})'>Editar</button></td>
+    </tr>`;}).join('')}</tbody></table>`;
+  }
+};
+window.dragTask=(e,id)=>{e.dataTransfer.setData('taskId',id);};
+window.dropTask=async(e,status)=>{
+  const id=e.dataTransfer.getData('taskId');
+  if(!id)return;
+  await updateDoc(doc(db,'tasks',id),{status});
 };
 
 // ── TEAM ──
@@ -1172,18 +1202,76 @@ function renderCV(){
           <button class="bsm" onclick="event.stopPropagation();om('frente',{clientId:'${client.id}',projectId:'${p.id}'})">+ Frente</button>
         </div>
       </div>`).join('')}</div>
-    ${S.aproj?renderPD(client,k):'<div class="empty">Selecione um projeto para ver tarefas</div>'}`;
+    ${S.aproj?renderPD(client,k):'<div class="empty">Selecione um projeto para ver tarefas e frentes</div>'}`;
+
+  }else if(tab==='tarefas'){
+    // All tasks for this client with filters + list/kanban toggle
+    const tvw=S.ctView||'list';
+    const tfc=S.ctFP||'';const tfa=S.ctFA||'';const tfs=S.ctFS||'';
+    let allT=S.tasks.filter(t=>t.clientId===S.acl);
+    if(tfc)allT=allT.filter(t=>t.projectId===tfc);
+    if(tfa)allT=allT.filter(t=>t.assignee===tfa);
+    if(tfs)allT=allT.filter(t=>t.status===tfs);
+
+    mc.innerHTML=`<div class="fbar" style="margin-bottom:12px;">
+      <select id="ctFP" onchange="S.ctFP=this.value;rv()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos projetos</option>${ps.map(p=>`<option value="${p.id}" ${tfc===p.id?'selected':''}>${p.name}</option>`).join('')}</select>
+      <select id="ctFA" onchange="S.ctFA=this.value;rv()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos responsáveis</option>${teamNames().map(n=>`<option value="${n}" ${tfa===n?'selected':''}>${n}</option>`).join('')}</select>
+      <select id="ctFS" onchange="S.ctFS=this.value;rv()" style="font-size:12px;padding:6px 9px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;"><option value="">Todos status</option>${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${tfs===v?'selected':''}>${l}</option>`).join('')}</select>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button onclick="S.ctView='list';rv()" class="${tvw==='list'?'bp':'bo'}" style="font-size:11px;padding:5px 11px;">☰ Lista</button>
+        <button onclick="S.ctView='kanban';rv()" class="${tvw==='kanban'?'bp':'bo'}" style="font-size:11px;padding:5px 11px;">⊞ Kanban</button>
+        <button onclick="om('task',{clientId:'${client.id}'})" class="bp" style="font-size:11px;padding:5px 11px;">+ Tarefa</button>
+      </div>
+    </div>
+    ${allT.length===0?'<div class="empty">Nenhuma tarefa.</div>':tvw==='kanban'?
+    `<div class="kanban">${['todo','doing','review','done'].map(st=>{
+      const ft=allT.filter(t=>t.status===st);
+      return`<div class="kc" ondragover="event.preventDefault()" ondrop="dropTask(event,'${st}')"><div class="kc-h">${SL[st]}<span class="kc-n">${ft.length}</span></div>
+      ${ft.map(t=>{const fr=S.frentes.find(f=>f.id===t.frenteId);const pr=S.projects.find(p=>p.id===t.projectId);return`<div class="kcard" draggable="true" ondragstart="dragTask(event,'${t.id}')" style="cursor:grab;">
+        <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div>
+        ${pr?`<div style="font-size:10px;color:var(--t3);margin-bottom:4px;">${pr.name}</div>`:''}
+        ${fr?`<div style="font-size:9px;color:var(--t3);margin-bottom:4px;">${FICONS[fr.type]||'📁'} ${fr.name}</div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:15px;height:15px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div>
+        <button class="bsm" style="font-size:10px;width:100%;margin-top:5px;" onclick='om("task",${JSON.stringify(t).replace(/'/g,"&#39;")})'>Editar</button>
+      </div>`;}).join('')}</div>`;
+    }).join('')}</div>`
+    :`<table class="tbl"><thead><tr>${['Tarefa','Projeto','Frente','Responsável','Status','Prazo',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+    ${allT.map(t=>{const pr=S.projects.find(p=>p.id===t.projectId);const fr=S.frentes.find(f=>f.id===t.frenteId);return`<tr>
+      <td style="font-weight:600;">${t.urgent?'<span class="udot"></span>':''}${t.title}</td>
+      <td style="color:var(--t2);">${pr?.name||'—'}</td>
+      <td style="color:var(--t2);">${fr?`${FICONS[fr.type]||'📁'} ${fr.name}`:'—'}</td>
+      <td>${t.assignee||'—'}</td><td>${sb(t.status)}</td><td style="color:var(--t3);">${t.deadline||''}</td>
+      <td><button class="bsm" onclick='om("task",${JSON.stringify(t).replace(/'/g,"&#39;")})'>Editar</button></td>
+    </tr>`;}).join('')}</tbody></table>`}`;
 
   }else if(tab==='kanban'){
-    const allT=S.aproj?S.tasks.filter(t=>t.projectId===S.aproj):S.tasks.filter(t=>t.clientId===S.acl);
-    mc.innerHTML=`<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+    const allT=S.tasks.filter(t=>t.clientId===S.acl);
+    const fkP=S.kbProj||'';const fkA=S.kbAssignee||'';
+    let kbT=allT;
+    if(fkP)kbT=kbT.filter(t=>t.projectId===fkP);
+    if(fkA)kbT=kbT.filter(t=>t.assignee===fkA);
+    mc.innerHTML=`<div class="fbar" style="margin-bottom:12px;">
       <span style="font-size:12px;color:var(--t2);font-weight:600;">Projeto:</span>
-      <select style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;" onchange="S.aproj=this.value||null;rv()">
-        <option value="">Todos</option>${ps.map(p=>`<option value="${p.id}" ${S.aproj===p.id?'selected':''}>${p.name}</option>`).join('')}
+      <select onchange="S.kbProj=this.value;rv()" style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;">
+        <option value="">Todos</option>${ps.map(p=>`<option value="${p.id}" ${fkP===p.id?'selected':''}>${p.name}</option>`).join('')}
       </select>
-      <button class="bp" style="margin-left:auto;" onclick="om('task',{clientId:'${client.id}'${S.aproj?`,projectId:'${S.aproj}'`:''}})">+ Tarefa</button>
+      <span style="font-size:12px;color:var(--t2);font-weight:600;">Responsável:</span>
+      <select onchange="S.kbAssignee=this.value;rv()" style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;">
+        <option value="">Todos</option>${teamNames().map(n=>`<option value="${n}" ${fkA===n?'selected':''}>${n}</option>`).join('')}
+      </select>
+      <button class="bp" style="margin-left:auto;" onclick="om('task',{clientId:'${client.id}'${fkP?`,projectId:'${fkP}'`:''}})">+ Tarefa</button>
     </div>
-    <div class="kanban">${['todo','doing','review','done'].map(st=>{const ft=allT.filter(t=>t.status===st);return`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${ft.length}</span></div>${ft.map(t=>{const fr=S.frentes.find(f=>f.id===t.frenteId);return`<div class="kcard"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div>${fr?`<div style="font-size:9px;color:var(--t3);margin-bottom:4px;">${FICONS[fr.type]||'📁'} ${fr.name}</div>`:''}<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div></div>`;}).join('')}</div>`;}).join('')}</div>`;
+    <div class="kanban">${['todo','doing','review','done'].map(st=>{
+      const ft=kbT.filter(t=>t.status===st);
+      return`<div class="kc" ondragover="event.preventDefault()" ondrop="dropTask(event,'${st}')"><div class="kc-h">${SL[st]}<span class="kc-n">${ft.length}</span></div>
+      ${ft.map(t=>{const fr=S.frentes.find(f=>f.id===t.frenteId);const pr=S.projects.find(p=>p.id===t.projectId);return`<div class="kcard" draggable="true" ondragstart="dragTask(event,'${t.id}')" style="cursor:grab;">
+        <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div>
+        ${pr&&!fkP?`<div style="font-size:10px;color:var(--t3);margin-bottom:3px;">${pr.name}</div>`:''}
+        ${fr?`<div style="font-size:9px;color:var(--t3);margin-bottom:3px;">${FICONS[fr.type]||'📁'} ${fr.name}</div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:15px;height:15px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div>
+        <button class="bsm" style="font-size:10px;width:100%;margin-top:5px;" onclick='om("task",${JSON.stringify(t).replace(/'/g,"&#39;")})'>Editar</button>
+      </div>`;}).join('')}</div>`;
+    }).join('')}</div>`;
 
   }else if(tab==='checklist'){
     mc.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="bp" onclick="om('cl',{projectId:S.aproj||''})">+ Item</button></div>`+
@@ -1196,8 +1284,7 @@ function renderCV(){
       <div style="width:36px;height:36px;border-radius:9px;background:${sc[0]};color:${sc[1]};display:flex;align-items:center;justify-content:center;font-size:15px;">${d.status==='aprovado'?'✓':'↑'}</div>
       <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div><div style="font-size:10px;color:var(--t3);">${pr?.name||''}</div></div>
       ${bdg(d.status,sc[0],sc[1])}<span style="font-size:13px;color:var(--t4);margin-left:9px;display:inline-block;transform:${op?'rotate(90deg)':'none'};">›</span>
-    </div>${op?`<div class="del-body">${d.link?`<div style="background:var(--bg3);border-radius:9px;padding:11px 14px;margin-bottom:13px;display:flex;align-items:center;gap:10px;"><div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div>${d.description?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">${d.description}</div>`:''}</div><a href="${d.link}" target="_blank" style="font-size:12px;color:var(--p);border:1.5px solid var(--p);border-radius:7px;padding:5px 12px;text-decoration:none;font-weight:700;">Abrir ↗</a></div>`:''}<div class="cmt-box">${dcmts.map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:${cm.authorRole==='agency'?'var(--p)':'var(--pL)'};color:${cm.authorRole==='agency'?'#fff':'var(--p)'};">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);line-height:1.5;">${cm.text}</div></div>`).join('')}${dcmts.length===0?'<div class="empty">Sem comentários</div>':''}<div class="inp-row"><input class="cmt-inp" id="dc-${d.id}" placeholder="Comentar..."><button class="bp" onclick="sendDC('${d.id}')">Enviar</button></div></div></div>`:''}
-    </div>`;}).join('')}${dels.length===0?'<div class="empty">Nenhuma entrega</div>':''}`;
+    </div>${op?`<div class="del-body">${d.link?`<div style="background:var(--bg3);border-radius:9px;padding:11px 14px;margin-bottom:13px;display:flex;align-items:center;gap:10px;"><div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${d.title}</div>${d.description?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">${d.description}</div>`:''}</div><a href="${d.link}" target="_blank" style="font-size:12px;color:var(--p);border:1.5px solid var(--p);border-radius:7px;padding:5px 12px;text-decoration:none;font-weight:700;">Abrir ↗</a></div>`:''}<div class="cmt-box">${dcmts.map(cm=>`<div class="cmt"><div class="cmt-h"><div class="cmt-av" style="background:${cm.authorRole==='agency'?'var(--p)':'var(--pL)'};color:${cm.authorRole==='agency'?'#fff':'var(--p)'};">${(cm.authorName||'?')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--t);">${cm.authorName}</span><span style="font-size:10px;color:var(--t4);margin-left:auto;">${ft(cm.createdAt)}</span></div><div style="font-size:12px;color:var(--t2);line-height:1.5;">${cm.text}</div></div>`).join('')}${dcmts.length===0?'<div class="empty">Sem comentários</div>':''}<div class="inp-row"><input class="cmt-inp" id="dc-${d.id}" placeholder="Comentar..."><button class="bp" onclick="sendDC('${d.id}')">Enviar</button></div></div></div>`:''}</div>`;}).join('')}${dels.length===0?'<div class="empty">Nenhuma entrega</div>':''}`;
 
   }else if(tab==='comentarios'){
     mc.innerHTML=`<div style="margin-bottom:12px;"><select style="font-size:12px;padding:6px 10px;border:0.5px solid var(--bd2);border-radius:9px;background:var(--bg2);color:var(--t);outline:none;" onchange="S.aproj=this.value||null;rv()"><option value="">Selecione projeto...</option>${ps.map(p=>`<option value="${p.id}" ${S.aproj===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
@@ -1209,39 +1296,6 @@ function renderCV(){
   }
 }
 
-function renderPD(client,k){
-  const p=S.projects.find(x=>x.id===S.aproj);if(!p)return'';
-  const frentes=S.frentes.filter(f=>f.projectId===S.aproj);
-  const pt=S.tasks.filter(t=>t.projectId===S.aproj);
-  return`<div style="margin-top:18px;border-top:0.5px solid var(--bd);padding-top:18px;">
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
-      <span style="font-size:15px;font-weight:700;color:var(--t);flex:1;">${p.name}</span>
-      <button class="bo" onclick="om('del',{clientId:'${S.acl}',projectId:'${p.id}'})">+ Entrega</button>
-      <button class="bo" onclick="om('frente',{projectId:'${p.id}',clientId:'${S.acl}'})">+ Frente</button>
-      <button class="bp" onclick="om('task',{clientId:'${S.acl}',projectId:'${p.id}'})">+ Tarefa</button>
-    </div>
-    ${frentes.length>0?`<div style="margin-bottom:14px;">${frentes.map(fr=>{const fT=S.tasks.filter(t=>t.frenteId===fr.id);const doneF=fT.filter(t=>t.status==='done').length;const isO=S.of[fr.id];return`<div class="frente-card"><div class="frente-head" onclick="S.of['${fr.id}']=!S.of['${fr.id}'];rv()">
-      <div style="width:32px;height:32px;border-radius:8px;background:var(--pL);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:14px;">${FICONS[fr.type]||'📁'}</div>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--t);">${fr.name}</div><div style="font-size:10px;color:var(--t3);">${fr.type} · ${doneF}/${fT.length} tarefas</div></div>
-      ${pb(fr.priority||'normal')}
-      <button class="bsm" style="margin-right:8px;" onclick="event.stopPropagation();om('task',{clientId:'${S.acl}',projectId:'${p.id}',frenteId:'${fr.id}'})">+ Tarefa</button>
-      <span style="font-size:13px;color:var(--t4);display:inline-block;transform:${isO?'rotate(90deg)':'none'};">›</span>
-    </div>${isO?`<div class="frente-body"><div class="kanban">${['todo','doing','review','done'].map(st=>`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${fT.filter(t=>t.status===st).length}</span></div>${fT.filter(t=>t.status===st).map(t=>`<div class="kcard"><div style="font-size:11px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:5px;">${t.assignee?`<span style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:${k.bg};color:${k.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">${t.assignee[0]}</div>${t.assignee}</span>`:'—'}<span>${t.deadline||''}</span></div><select style="font-size:10px;width:100%;border:0.5px solid var(--bd2);border-radius:5px;padding:2px 5px;background:var(--bg3);color:var(--t);" onchange="updateDoc(doc(db,'tasks','${t.id}'),{status:this.value})">${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${t.status===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}</div>`).join('')}</div></div>`:''}
-    </div>`;}).join('')}</div>`:''}
-    ${frentes.length===0?`<div class="kanban">${['todo','doing','review','done'].map(st=>`<div class="kc"><div class="kc-h">${SL[st]}<span class="kc-n">${pt.filter(t=>t.status===st).length}</span></div>${pt.filter(t=>t.status===st).map(t=>`<div class="kcard"><div style="font-size:11px;font-weight:700;color:var(--t);margin-bottom:5px;">${t.urgent?'<span class="udot"></span>':''}${t.title}</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:5px;">${t.assignee||'—'}<span>${t.deadline||''}</span></div><select style="font-size:10px;width:100%;border:0.5px solid var(--bd2);border-radius:5px;padding:2px 5px;background:var(--bg3);color:var(--t);" onchange="updateDoc(doc(db,'tasks','${t.id}'),{status:this.value})">${Object.entries(SL).map(([v,l])=>`<option value="${v}" ${t.status===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}</div>`).join('')}</div>`:''}</div>`;
-}
-
-// Open client portal view (full page)
-window.openClientPortal=()=>{
-  const c=S.clients.find(x=>x.id===S.acl);if(!c)return;
-  // Set up portal state for this client
-  S.cd={...c};S.ptab='visao';
-  document.querySelectorAll('.cl-it').forEach(e=>e.classList.remove('on'));
-  show('portal');
-  $('pAv').textContent=c.initials||'?';$('pNm').textContent=c.name;$('pEm').textContent='Visualização interna';
-  rp();
-};
-window.backToAgency=()=>{show('shell');rv();};
 
 // ACTIONS
 window.togCk=async(id,pjId,val)=>{await updateDoc(doc(db,'checklist',id),{done:val});const items=S.checklist.filter(c=>c.projectId===pjId);const done=items.filter(c=>c.id===id?val:c.done).length;await updateDoc(doc(db,'projects',pjId),{progress:items.length?Math.round(done/items.length*100):0});};
